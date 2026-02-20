@@ -2,7 +2,7 @@
 
 > AI(ChatGPT, Claude, Gemini 등)와의 채팅 기록을 **루브릭 기반**으로 분석하여 정량·정성적 피드백을 제공하는 교육용 웹 애플리케이션
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/greatsong/2026aichattingreader)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/greatsong/proof-of-process)
 
 ---
 
@@ -17,7 +17,6 @@
 - [환경 변수 설정](#환경-변수-설정)
 - [평가 흐름](#평가-흐름)
 - [루브릭 시스템](#루브릭-시스템)
-- [Rubric Studio (별도 앱)](#rubric-studio-별도-앱)
 - [배포 가이드](#배포-가이드)
 - [보안](#보안)
 - [라이선스](#라이선스)
@@ -58,7 +57,8 @@
 | 기능 | 설명 |
 |------|------|
 | **루브릭 관리** | 커스텀 루브릭 생성/수정/삭제 (항목별 가중치·5점 척도) |
-| **교과별 템플릿** | 일반 / 글쓰기 / 과학탐구 / 코딩 — 4종 루브릭 템플릿 즉시 사용 |
+| **교과별 템플릿** | 일반 / 글쓰기 / 과학탐구 / 코딩 4종 + EduFlow 5종 (총 9종) |
+| **윤리적 활용 확인** | EduFlow 루브릭의 Pass/Fail 윤리 체크 (자동 배지 표시) |
 | **JSON 불러오기** | 외부에서 설계한 루브릭을 JSON으로 가져오기 |
 | **API 설정** | Gemini / OpenAI / Claude 모델 선택, K-run(다회 평가) 설정 |
 | **앙상블 모드** | 3개 AI 모델을 동시 호출하여 결과 합성 |
@@ -96,7 +96,7 @@
 ## 프로젝트 구조
 
 ```
-2026aichattingreader/
+proof-of-process/
 ├── index.html                       # SPA 진입점 (lang="ko", SEO 메타태그)
 ├── package.json                     # 의존성 및 스크립트
 ├── vite.config.js                   # Vite 설정 + 로컬 API mock 플러그인
@@ -107,9 +107,6 @@
 ├── api/                             # Vercel Edge Functions (서버리스)
 │   ├── evaluate.js                  # AI 평가 엔드포인트 (25초 타임아웃)
 │   └── config.js                    # PIN 검증 + 글로벌 설정 API
-│
-├── rubric-studio/                   # 루브릭 디자인 스튜디오 (별도 Next.js 앱)
-│   └── (상세 구조는 아래 참조)
 │
 └── src/
     ├── main.jsx                     # React 19 앱 진입점
@@ -141,7 +138,7 @@
     │   │
     │   └── evaluation/              # 평가 결과 컴포넌트
     │       ├── EvaluationResult.jsx #   결과 오케스트레이터 (PDF 다운로드 포함)
-    │       ├── ScoreOverview.jsx    #   점수 요약 + 등급 메시지 + 특징
+    │       ├── ScoreOverview.jsx    #   점수 요약 + 등급 메시지 + 윤리 배지 + 특징
     │       ├── CriteriaDetail.jsx   #   항목별 평가 (근거 인용 + 점수 배지)
     │       ├── RadarChart.jsx       #   레이더 차트 + 역량 균형 분석
     │       └── GrowthChart.jsx      #   성장 추적 라인 차트 + 추세 분석
@@ -160,8 +157,13 @@
     │       ├── openai.js            #   OpenAI GPT API
     │       └── claude.js            #   Anthropic Claude API
     │
-    └── data/
-        └── rubricTemplates.js       # 교과별 루브릭 템플릿 4종
+    ├── data/
+    │   └── rubricTemplates.js       # 교과별 루브릭 템플릿 9종 (일반 4 + EduFlow 5)
+    │
+    └── test/                        # 테스트 인프라
+        ├── setup.js                 # jsdom 환경 설정
+        ├── helpers.jsx              # 렌더 헬퍼
+        └── fixtures/                # 모킹 데이터 (루브릭, 채팅, API 응답)
 ```
 
 ---
@@ -177,8 +179,8 @@
 ### 1단계: 저장소 클론
 
 ```bash
-git clone https://github.com/greatsong/2026aichattingreader.git
-cd 2026aichattingreader
+git clone https://github.com/greatsong/proof-of-process.git
+cd proof-of-process
 ```
 
 ### 2단계: 의존성 설치
@@ -344,6 +346,35 @@ npm run dev
 | **과학탐구** | 탐구 설계, 데이터 분석, 과학적 검증, 결론 도출, 한계 인식 | 과학 교과 |
 | **코딩** | 문제 분석, 알고리즘 설계, 코드 구현, 디버깅 과정, 코드 개선 | 정보/SW 교과 |
 
+### EduFlow 루브릭 (5종) — 공통 3기준 + 도메인별 내용 이해 + 윤리 P/F
+
+EduFlow 루브릭은 **통일된 3개 공통 기준**(각 25%)에 교과별 **내용 이해**(25%)를 추가한 구조입니다.
+
+#### 공통 평가 기준
+
+| 기준 | 가중치 | 5점 (최상) | 1점 (최하) |
+|------|--------|-----------|-----------|
+| **자기주도성** | 25% | 학습 목표 설정, 맥락 체계적 전달, 대화 주도 | "해줘" 수준의 요청만 |
+| **비판적 검증** | 25% | AI 응답의 정확성·한계를 따져보고 수정 | 전혀 검증하지 않고 복사 |
+| **반복적 개선** | 25% | 구체적 수정사항을 전달하며 여러 차례 개선 | 첫 응답을 그대로 사용 |
+
+#### 교과별 "내용 이해" (25%)
+
+| 템플릿 | 내용 이해 초점 | 대상 |
+|--------|--------------|------|
+| **VPython** | 3D 좌표계, 물리 시뮬레이션, 코드-물리 연결 | 물리+코딩 융합 |
+| **바이브코딩** | HTML/CSS/JS 구조, 코드 동작 원리, 디버깅 | 웹개발 입문 |
+| **문제해결** | 문제 분석, 전략 비교, 해법 논리 | 범교과 문제해결 |
+| **글쓰기** | 글의 구조, 근거 활용, 표현 개선 | 국어/사회 |
+| **탐구활동** | 탐구 설계, 데이터 해석, 과학적 추론 | 과학 교과 |
+
+#### 윤리적 활용 확인 (Pass/Fail)
+
+EduFlow 루브릭에는 자동 **윤리 체크**가 포함됩니다:
+- 기본값: **Pass** (특별한 이슈가 없으면 통과)
+- **Fail 기준**: AI 생성물을 자기 것처럼 제출 / 유해 콘텐츠 생성 시도 / 타인 과제 대리 수행
+- UI에 초록(Pass) 또는 빨강(Fail) 배지로 표시
+
 ### 커스텀 루브릭 JSON 형식
 
 ```json
@@ -367,36 +398,6 @@ npm run dev
 ```
 
 > 모든 항목의 `weight` 합은 100이어야 합니다.
-
----
-
-## Rubric Studio (별도 앱)
-
-`rubric-studio/` 디렉토리에는 AI 기반 루브릭 설계 도구가 별도의 Next.js 앱으로 포함되어 있습니다.
-
-### 주요 기능
-
-| 모드 | 설명 |
-|------|------|
-| **평가 모드** | 전체 화면 채팅 평가 인터페이스 |
-| **학습/스튜디오 모드** | AI 코치(좌측) + 시뮬레이터(우측) 듀얼 패널 |
-| **관리 모드** | 루브릭 CRUD 및 버전 관리 |
-
-### 기술 스택
-
-- Next.js 16 (App Router) + TypeScript + Tailwind CSS 4
-- Vercel AI SDK (스트리밍 대화)
-- Zustand (상태 관리)
-- 채팅 스크래퍼 (ChatGPT, Claude, Gemini 링크 자동 파싱)
-
-### 실행 방법
-
-```bash
-cd rubric-studio
-npm install
-npm run dev
-# http://localhost:3000
-```
 
 ---
 
@@ -466,6 +467,35 @@ npm run build
 
 ---
 
+## 테스트
+
+Vitest 기반 테스트 인프라가 구축되어 있습니다. (194개 테스트, 17개 파일)
+
+```bash
+# 전체 테스트 실행
+npm test
+
+# 단일 실행 (CI용)
+npm run test:run
+
+# 커버리지 리포트
+npm run test:coverage
+```
+
+### 테스트 구성
+
+| 영역 | 파일 수 | 주요 검증 |
+|------|---------|----------|
+| **서비스 로직** | 13개 | 프롬프트 빌더, 응답 파서, 히스토리, 프로바이더 |
+| **컴포넌트** | 3개 | ChatInput, ErrorBoundary, SelfEvaluation |
+| **상수/유틸** | 1개 | 등급 계산, 색상 매핑 |
+| **EduFlow 루브릭** | 1개 | 구조 검증, 윤리 P/F, 프롬프트 품질 (26개 테스트) |
+| **Live API** | 1개 | 실제 Claude API 호출, 고/저 품질 채팅 평가 |
+
+> Live API 테스트(`liveEvaluation.test.js`)는 실제 API 키가 필요합니다.
+
+---
+
 ## NPM 스크립트
 
 | 명령어 | 설명 |
@@ -474,6 +504,9 @@ npm run build
 | `npm run build` | 프로덕션 빌드 (dist/ 출력) |
 | `npm run preview` | 빌드 결과 로컬 미리보기 |
 | `npm run lint` | ESLint 코드 검사 |
+| `npm test` | Vitest 워치 모드 테스트 |
+| `npm run test:run` | 전체 테스트 단일 실행 |
+| `npm run test:coverage` | 커버리지 리포트 생성 |
 
 ---
 

@@ -198,6 +198,82 @@
     font-weight: var(--font-weight-medium);
 }
 
+/* Ethics Check Badge */
+.ethics-badge {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    margin-top: var(--spacing-4);
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+}
+
+.ethics-badge.ethics-pass {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 1px solid #86efac;
+}
+
+.ethics-badge.ethics-fail {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border: 1px solid #fca5a5;
+    flex-wrap: wrap;
+}
+
+.ethics-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: var(--font-weight-bold);
+    flex-shrink: 0;
+}
+
+.ethics-pass .ethics-icon {
+    background: #22c55e;
+    color: white;
+}
+
+.ethics-fail .ethics-icon {
+    background: #ef4444;
+    color: white;
+}
+
+.ethics-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+
+.ethics-label {
+    color: var(--text-secondary);
+    font-weight: var(--font-weight-medium);
+}
+
+.ethics-result {
+    font-weight: var(--font-weight-bold);
+}
+
+.ethics-pass .ethics-result {
+    color: #16a34a;
+}
+
+.ethics-fail .ethics-result {
+    color: #dc2626;
+}
+
+.ethics-reason {
+    width: 100%;
+    margin-top: var(--spacing-1);
+    padding-top: var(--spacing-1);
+    border-top: 1px solid #fca5a5;
+    font-size: var(--font-size-xs);
+    color: #991b1b;
+}
+
 /* Criteria Scores */
 .criteria-scores h3 {
     font-size: var(--font-size-lg);

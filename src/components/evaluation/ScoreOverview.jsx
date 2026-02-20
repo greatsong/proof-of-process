@@ -13,7 +13,7 @@ function getGradeMessage(grade, totalScore) {
     return { emoji: '🔄', message: '다시 도전해보세요!', description: 'AI와 충분한 대화를 나누고 다시 평가해보세요.' }
 }
 
-function ScoreOverview({ result, gradeColors }) {
+function ScoreOverview({ result, gradeColors, ethicsCheck }) {
     const {
         totalScore,
         grade,
@@ -82,6 +82,24 @@ function ScoreOverview({ result, gradeColors }) {
                         <span className="reliability-text">
                             {evaluationMeta.runs}회 평가 평균 (점수 범위: {evaluationMeta.scoreRange.min}~{evaluationMeta.scoreRange.max})
                         </span>
+                    </div>
+                )}
+
+                {/* 윤리적 활용 확인 (P/F) */}
+                {ethicsCheck && (
+                    <div className={`ethics-badge ethics-${ethicsCheck.result}`}>
+                        <span className="ethics-icon">
+                            {ethicsCheck.result === 'pass' ? '✓' : '✗'}
+                        </span>
+                        <div className="ethics-content">
+                            <span className="ethics-label">윤리적 활용</span>
+                            <span className="ethics-result">
+                                {ethicsCheck.result === 'pass' ? 'Pass' : 'Fail'}
+                            </span>
+                        </div>
+                        {ethicsCheck.result === 'fail' && ethicsCheck.reason && (
+                            <p className="ethics-reason">{ethicsCheck.reason}</p>
+                        )}
                     </div>
                 )}
             </div>

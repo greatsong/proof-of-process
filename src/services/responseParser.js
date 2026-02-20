@@ -51,7 +51,8 @@ export function parseEvaluationResponse(response, rubric) {
             conversationFlow: result.conversationFlow || '',
             qualitativeEvaluation: result.qualitativeEvaluation || '',
             suggestions: result.suggestions || [],
-            studentRecordDraft: result.studentRecordDraft || ''
+            studentRecordDraft: result.studentRecordDraft || '',
+            ethicsCheck: result.ethicsCheck || null
         }
     } catch (error) {
         console.error('JSON 파싱 오류:', error)

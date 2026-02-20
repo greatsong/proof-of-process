@@ -34,7 +34,8 @@ function EvaluationResult({ result, rubric, onReset, apiSettings, selfEvalScores
         suggestions,
         studentRecordDraft,
         verificationSummary,
-        conversationFlow
+        conversationFlow,
+        ethicsCheck
     } = result
 
     const gradeColors = getGradeColor(grade)
@@ -162,7 +163,7 @@ function EvaluationResult({ result, rubric, onReset, apiSettings, selfEvalScores
                 </div>
 
                 {/* 점수 요약 + 특징 + 하이라이트 */}
-                <ScoreOverview result={result} gradeColors={gradeColors} />
+                <ScoreOverview result={result} gradeColors={gradeColors} ethicsCheck={ethicsCheck} />
 
                 {/* 레이더 차트 */}
                 <RadarChart criteriaScores={criteriaScores} />

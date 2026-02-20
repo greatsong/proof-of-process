@@ -1,0 +1,67 @@
+export const mockEvaluationResult = {
+    totalScore: 85,
+    grade: 'B+',
+    criteriaScores: [
+        {
+            criterionId: 'c1',
+            name: '질문의 명확성',
+            score: 4,
+            maxScore: 5,
+            percentage: 80,
+            evidence: '학생이 「구체적으로 고등학생 수준에서 설명해줘」라고 요청하여 명확성이 높음',
+            strengths: '맥락 정보를 잘 제공함',
+            weaknesses: '초반 질문이 다소 넓음',
+            improvement: 'Before: "설명해줘" → After: "고등학생 수준에서 3가지 예시를 들어 설명해줘"',
+            nextSteps: '',
+        },
+        {
+            criterionId: 'c2',
+            name: '반복적 개선',
+            score: 4,
+            maxScore: 5,
+            percentage: 80,
+            evidence: '턴 2에서 「더 구체적으로 설명해줘」라고 후속 질문을 함',
+            strengths: '이전 응답을 바탕으로 발전된 질문',
+            weaknesses: '개선 횟수가 적음',
+            improvement: '더 많은 후속 질문을 통해 깊이 있는 탐구 필요',
+            nextSteps: '',
+        },
+        {
+            criterionId: 'c3',
+            name: '비판적 사고',
+            score: 3,
+            maxScore: 5,
+            percentage: 60,
+            evidence: '비판적 검증이 명시적으로 나타나지 않음',
+            strengths: '질문의 방향은 적절함',
+            weaknesses: 'AI 응답을 그대로 수용함',
+            improvement: 'AI 응답에 대해 "이것이 정확한지 확인해줘"와 같은 검증 질문 필요',
+            nextSteps: 'AI 응답 후 "이 정보의 출처가 무엇인가요?"를 물어보세요.',
+        },
+        {
+            criterionId: 'c4',
+            name: '실제 적용',
+            score: 4,
+            maxScore: 5,
+            percentage: 80,
+            evidence: '「나는 고등학생이야」라며 실제 상황에 맞는 적용을 시도함',
+            strengths: '자신의 수준에 맞춘 활용',
+            weaknesses: '적용의 구체성이 더 필요함',
+            improvement: '학습한 내용을 실제 과제에 적용해보세요',
+            nextSteps: '',
+        },
+    ],
+    characteristics: ['구체적 맥락 제공', '후속 질문 활용', '실생활 연계'],
+    conversationFlow: '초반에는 넓은 질문으로 시작했으나, 후반에 구체적으로 좁혀감',
+    qualitativeEvaluation: '전반적으로 AI를 잘 활용하고 있으며, 비판적 사고 능력을 키우면 더 효과적인 학습이 가능할 것입니다.',
+    suggestions: [
+        'AI 응답의 정확성을 검증하는 습관을 기르세요',
+        '더 많은 후속 질문을 통해 깊이 있는 탐구를 해보세요',
+        '학습한 내용을 실제 과제에 적용해보세요',
+    ],
+    studentRecordDraft: 'AI 채팅 활용 역량이 우수하며, 맥락에 맞는 질문을 통해 효과적으로 정보를 수집하는 능력을 보여줌.',
+}
+
+export const mockEvaluationResultJSON = JSON.stringify(mockEvaluationResult, null, 2)
+
+export const mockEvaluationResultInCodeBlock = '```json\n' + mockEvaluationResultJSON + '\n```'

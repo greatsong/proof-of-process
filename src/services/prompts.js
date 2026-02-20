@@ -22,6 +22,28 @@ ${levelsDesc}`
 
     const criteriaNamesList = rubric.criteria.map((c, i) => `${i + 1}. ${c.name}`).join('\n')
 
+    // criterionId 매핑 (AI가 정확한 ID를 사용하도록)
+    const criteriaIdList = rubric.criteria.map(c => `- criterionId: "${c.id}" → ${c.name}`).join('\n')
+
+    // 윤리적 활용 확인 (P/F) 섹션
+    const ethicsSection = rubric.ethicsCheck
+        ? '\n## 윤리적 활용 확인 (Pass/Fail)\n' +
+          '이 루브릭에는 윤리적 활용 확인이 포함됩니다. 다음에 해당하면 Fail입니다:\n' +
+          rubric.ethicsCheck.failCriteria.map(c => `- ${c}`).join('\n') +
+          '\n\n특별한 윤리적 이슈가 없으면 Pass로 판정하세요.\n'
+        : ''
+
+    const ethicsCheckJson = rubric.ethicsCheck
+        ? `  "ethicsCheck": {
+    "result": "pass",
+    "reason": "특별한 윤리적 이슈 없음 (문제 발견 시 사유 작성)"
+  },\n`
+        : ''
+
+    const ethicsInstruction = rubric.ethicsCheck
+        ? `\n9. **윤리적 활용 확인**: 특별한 이슈가 없으면 "pass"로 판정하세요. 명확한 위반이 있을 때만 "fail"로 판정하고 reason에 구체적 사유를 작성하세요.`
+        : ''
+
     // 대화 구조 파싱 시도
     const { turns, parsed } = parseChatContent(chatContent)
     const turnStats = parsed ? analyzeTurns(turns) : null
@@ -61,7 +83,7 @@ evidence 필드에는 가능하면 **"턴 N에서"**를 명시하여 시계열�
 # 평가 루브릭: ${rubric.name}
 
 ${criteriaDescription}
-
+${ethicsSection}
 # 학생 자기평가 / 추가 맥락 (Additional Context)
 ${reflection ? reflection : "(없음)"}
 
@@ -90,14 +112,17 @@ ${criteriaNamesList}
 반드시 다음 JSON 형식으로만 응답해주세요. 다른 텍스트 없이 JSON만 출력하세요.
 criteriaScores 배열에는 반드시 **${rubric.criteria.length}개 항목**이 포함되어야 하며, **각 항목마다 evidence, strengths, weaknesses, improvement 필드가 비어있지 않아야 합니다**.
 
+⚠️ criterionId는 반드시 아래 값을 그대로 사용하세요:
+${criteriaIdList}
+
 \`\`\`json
 {
   "totalScore": 85,
   "grade": "B+",
   "criteriaScores": [
     {
-      "criterionId": "criterion_1",
-      "name": "첫 번째 평가 항목명",
+      "criterionId": "${rubric.criteria[0]?.id || 'criterion_1'}",
+      "name": "${rubric.criteria[0]?.name || '첫 번째 평가 항목명'}",
       "score": 4,
       "maxScore": 5,
       "percentage": 80,
@@ -108,8 +133,8 @@ criteriaScores 배열에는 반드시 **${rubric.criteria.length}개 항목**이
       "nextSteps": "이 항목 점수가 3점 이하일 때, 다음 번에 시도해볼 구체적인 행동 1가지"
     },
     {
-      "criterionId": "criterion_2",
-      "name": "두 번째 평가 항목명",
+      "criterionId": "${rubric.criteria[1]?.id || 'criterion_2'}",
+      "name": "${rubric.criteria[1]?.name || '두 번째 평가 항목명'}",
       "score": 3,
       "maxScore": 5,
       "percentage": 60,
@@ -130,7 +155,7 @@ criteriaScores 배열에는 반드시 **${rubric.criteria.length}개 항목**이
     "구체적인 실천 방안 1",
     "구체적인 실천 방안 2"
   ],
-  "studentRecordDraft": "생활기록부 작성용 초안 (학생의 자기평가 내용이 있다면 이를 포함하여, 구체적인 활동 맥락이 드러나도록 3-4문장으로 작성)"
+${ethicsCheckJson}  "studentRecordDraft": "생활기록부 작성용 초안 (학생의 자기평가 내용이 있다면 이를 포함하여, 구체적인 활동 맥락이 드러나도록 3-4문장으로 작성)"
 }
 \`\`\`
 
@@ -147,5 +172,5 @@ criteriaScores 배열에는 반드시 **${rubric.criteria.length}개 항목**이
 5. totalScore는 각 항목 점수에 가중치를 적용한 100점 만점 환산 점수입니다.
 6. evidence, strengths, weaknesses, improvement 필드는 **빈 문자열("")이면 안 됩니다**. 반드시 내용을 채워주세요.
 7. nextSteps는 해당 항목 점수가 3점 이하일 때만 채우고, 4점 이상이면 빈 문자열("")로 두세요.
-8. 반드시 유효한 JSON 형식으로 응답해주세요. 주석은 포함하지 마세요.`
+8. 반드시 유효한 JSON 형식으로 응답해주세요. 주석은 포함하지 마세요.${ethicsInstruction}`
 }
