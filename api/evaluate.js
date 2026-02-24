@@ -84,7 +84,9 @@ export default async function handler(req) {
         const effectiveApiKey = singleApiKey || clientApiKeys[provider] || SERVER_KEYS[provider];
 
         if (!effectiveApiKey) {
-            return new Response(JSON.stringify({ error: `API Key for ${provider} not configured.` }), { status: 500 });
+            return new Response(JSON.stringify({
+                error: `서버에 ${provider} API 키가 설정되지 않았습니다. Vercel 대시보드에서 환경변수를 설정한 후 재배포하세요. (필요한 변수: ${provider === 'gemini' ? 'GEMINI_API_KEY' : provider === 'claude' ? 'CLAUDE_API_KEY' : 'OPENAI_API_KEY'})`
+            }), { status: 500 });
         }
 
         const resultText = await withTimeout(
@@ -107,7 +109,7 @@ export default async function handler(req) {
  * Call individual provider API
  */
 async function callProvider(provider, prompt, apiKey, model) {
-    if (!apiKey) throw new Error(`Missing API Key for ${provider}`);
+    if (!apiKey) throw new Error(`서버에 ${provider} API 키가 없습니다. Vercel 환경변수 설정 후 재배포 필요.`);
 
     let url, options;
 

@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "deploy": "node scripts/deploy.js",
+    "deploy:check": "node scripts/deploy.js --check-only"
   },
   "dependencies": {
     "@vercel/kv": "^3.0.0",
