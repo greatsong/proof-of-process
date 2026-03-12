@@ -250,6 +250,47 @@ function StudentGuide() {
                     </div>
                 </>
             )
+        },
+        {
+            id: 'privacy',
+            icon: '🔒',
+            title: '개인정보 보호',
+            content: (
+                <>
+                    <p className="guide-intro">
+                        여러분의 <strong>개인정보는 안전하게 보호</strong>됩니다. 이 시스템이 어떻게 개인정보를 다루는지 알아보세요.
+                    </p>
+
+                    <h4>🔹 이름과 학번은 어디에 저장되나요?</h4>
+                    <p>
+                        학생 이름과 학번은 <strong>입력하지 않아도 됩니다</strong> (선택 사항). 입력하더라도 여러분의 <strong>브라우저(localStorage)에만 저장</strong>되며, 외부 서버로 전송되지 않습니다.
+                    </p>
+
+                    <h4>🔹 AI에게 내 정보가 전달되나요?</h4>
+                    <div className="guide-highlight">
+                        <p>AI API(Gemini, OpenAI, Claude)에는 채팅 기록의 <strong>내용만 전송</strong>됩니다.</p>
+                        <ul>
+                            <li>학생 이름, 학번 등 <strong>개인 식별 정보는 AI에게 전송되지 않습니다</strong></li>
+                            <li>AI는 채팅 내용을 분석하여 평가 결과만 생성합니다</li>
+                        </ul>
+                    </div>
+
+                    <h4>🔹 개인정보처리방침은 어디서 확인하나요?</h4>
+                    <p>
+                        페이지 하단의 <strong>푸터(Footer)</strong>에 있는 "개인정보처리방침" 링크를 클릭하면 상세한 개인정보 처리 방침을 확인할 수 있습니다.
+                    </p>
+
+                    <h4>🔹 내 데이터를 삭제하고 싶다면?</h4>
+                    <p>
+                        <strong>"데이터 관리"</strong> 페이지에서 저장된 평가 기록, 채팅 로그 등 모든 데이터를 직접 확인하고 삭제할 수 있습니다.
+                    </p>
+
+                    <div className="guide-tip">
+                        <span className="tip-icon">💡</span>
+                        <p>개인정보가 걱정된다면 이름과 학번을 입력하지 않고도 평가 기능을 이용할 수 있어요. 안심하고 사용하세요!</p>
+                    </div>
+                </>
+            )
         }
     ]
 

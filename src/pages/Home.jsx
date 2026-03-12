@@ -5,6 +5,7 @@ import ChatInput from '../components/ChatInput'
 import EvaluationResult from '../components/EvaluationResult'
 import RubricSelector from '../components/RubricSelector'
 import StudentGuide from '../components/StudentGuide'
+import PrivacyPolicy from '../components/PrivacyPolicy'
 import { evaluateChat } from '../services/evaluator'
 import { verifyEvidence } from '../services/evidenceVerifier'
 import { getEvaluationHistory, saveEvaluationToHistory, clearEvaluationHistory } from '../services/evaluationHistory'
@@ -32,6 +33,7 @@ function Home() {
     const [showSelfEval, setShowSelfEval] = useState(false)
     const [pendingContent, setPendingContent] = useState('')
     const [pendingReflection, setPendingReflection] = useState('')
+    const [showPrivacy, setShowPrivacy] = useState(false)
 
     // Cycle loading messages
     useEffect(() => {
@@ -253,9 +255,14 @@ function Home() {
                     <div className="privacy-icon">🔒</div>
                     <div className="privacy-content">
                         <strong>개인정보 보호</strong>
-                        <p>입력하신 채팅 내용은 서버에 저장되지 않습니다. 평가는 실시간으로 처리되며, 페이지를 닫으면 모든 데이터가 삭제됩니다.</p>
+                        <p>
+                            입력하신 채팅 내용은 서버에 저장되지 않습니다. 평가는 실시간으로 처리되며, 페이지를 닫으면 모든 데이터가 삭제됩니다.
+                            {' '}<button className="privacy-link-inline" onClick={() => setShowPrivacy(true)}>개인정보 처리방침 보기</button>
+                        </p>
                     </div>
                 </section>
+
+                {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
             </div>
         </div>
     )

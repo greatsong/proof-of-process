@@ -1,14 +1,17 @@
+import { useState } from 'react'
 import { Routes, Route, Link, useLocation } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { APIProvider } from './context/APIContext'
 import { EvaluationProvider } from './context/EvaluationContext'
 import ErrorBoundary from './components/ErrorBoundary'
+import PrivacyPolicy from './components/PrivacyPolicy'
 import Home from './pages/Home'
 import Admin from './pages/Admin'
 import './App.css'
 
 function App() {
   const location = useLocation()
+  const [showPrivacy, setShowPrivacy] = useState(false)
 
   return (
     <AuthProvider>
@@ -45,11 +48,21 @@ function App() {
 
             <footer className="footer">
               <div className="container">
-                <p className="footer-text">
-                  © 2026 AI 채팅 평가 시스템 · 개인정보는 서버에 저장되지 않습니다
-                </p>
+                <div className="footer-content">
+                  <p className="footer-text">
+                    © 2026 AI 채팅 평가 시스템 · 개인정보는 서버에 저장되지 않습니다
+                  </p>
+                  <button
+                    className="footer-privacy-link"
+                    onClick={() => setShowPrivacy(true)}
+                  >
+                    개인정보 처리방침
+                  </button>
+                </div>
               </div>
             </footer>
+
+            {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
           </div>
         </EvaluationProvider>
       </APIProvider>

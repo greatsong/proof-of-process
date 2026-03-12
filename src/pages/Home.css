@@ -277,6 +277,23 @@
     line-height: var(--line-height-relaxed);
 }
 
+.privacy-link-inline {
+    background: none;
+    border: none;
+    color: var(--text-accent);
+    font-size: inherit;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: opacity var(--transition-fast);
+}
+
+.privacy-link-inline:hover {
+    opacity: 0.7;
+}
+
 /* Service Selector for Ensemble Mode */
 .service-selector {
     margin-top: var(--spacing-4);
