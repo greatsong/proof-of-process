@@ -26,7 +26,7 @@ export function APIProvider({ children }) {
                 models: {
                     gemini: 'gemini-2.0-flash',
                     openai: 'gpt-4o',
-                    claude: 'claude-3-5-sonnet-20240620'
+                    claude: 'claude-sonnet-4-6'
                 }
             }
 
@@ -35,7 +35,7 @@ export function APIProvider({ children }) {
                 initialSettings.models = {
                     gemini: initialSettings.ensembleModels?.gemini || 'gemini-2.0-flash',
                     openai: initialSettings.ensembleModels?.openai || 'gpt-4o',
-                    claude: initialSettings.ensembleModels?.claude || 'claude-3-5-sonnet-20240620'
+                    claude: initialSettings.ensembleModels?.claude || 'claude-sonnet-4-6'
                 }
                 // If there was a single model selected for the current provider, preserve it
                 if (initialSettings.model && initialSettings.provider !== 'ensemble') {

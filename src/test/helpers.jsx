@@ -18,7 +18,7 @@ export const defaultAPIContext = {
         apiKey: '',
         apiKeys: { gemini: '', openai: '', claude: '' },
         model: 'gemini-2.5-flash',
-        models: { gemini: 'gemini-2.5-flash', openai: 'gpt-4o', claude: 'claude-3-5-sonnet-20241022' },
+        models: { gemini: 'gemini-2.5-flash', openai: 'gpt-4o', claude: 'claude-sonnet-4-6' },
         evaluationRuns: 1,
         useServerSide: false,
     },
