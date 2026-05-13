@@ -105,7 +105,7 @@ export function APIProvider({ children }) {
         }
     }, [])
 
-    // PIN으로 서버 키 사용 권한 획득 (API 키가 클라이언트에 전송되지 않음)
+    // PIN으로 서버 키 사용 권한 획득 (단기 JWT 발급)
     const unlockApiWithPin = useCallback(async (pin) => {
         try {
             const res = await fetch('/api/config', {
@@ -118,7 +118,9 @@ export function APIProvider({ children }) {
                 const newSettings = {
                     ...apiSettings,
                     useServerSide: true,
-                    serverKeysUnlocked: true
+                    serverKeysUnlocked: true,
+                    serverToken: data.token || null,
+                    serverTokenExpiresAt: data.expiresAt || null
                 }
                 setApiSettingsState(newSettings)
                 saveToStorage('apiSettings', newSettings)

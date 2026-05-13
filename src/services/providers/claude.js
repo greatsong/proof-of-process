@@ -7,16 +7,20 @@ import { fetchWithTimeout } from '../utils'
 /**
  * Claude API 호출 (서버 프록시 경유)
  */
-export async function callClaudeAPI(prompt, apiKey, model = 'claude-haiku-4-5-20251001') {
+export async function callClaudeAPI(prompt, apiKey, model = 'claude-haiku-4-5-20251001', serverToken) {
+    const headers = { 'Content-Type': 'application/json' }
+    if (serverToken) headers.Authorization = `Bearer ${serverToken}`
+
     const response = await fetchWithTimeout('/api/evaluate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ prompt, provider: 'claude', model })
     }, 60000)
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({}))
-        throw new Error(error.error || `Claude API 오류: ${response.status}`)
+        const errMsg = typeof error.error === 'string' ? error.error : `Claude API 오류: ${response.status}`
+        throw new Error(errMsg)
     }
 
     const data = await response.json()

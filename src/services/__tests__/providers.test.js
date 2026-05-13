@@ -103,12 +103,10 @@ describe('callClaudeAPI', () => {
         vi.clearAllMocks()
     })
 
-    it('성공 응답 → content[0].text 추출', async () => {
+    it('성공 응답 → text 추출 (서버 프록시 shape)', async () => {
         fetchWithTimeout.mockResolvedValue({
             ok: true,
-            json: () => Promise.resolve({
-                content: [{ text: 'Claude response' }]
-            })
+            json: () => Promise.resolve({ text: 'Claude response' })
         })
 
         const result = await callClaudeAPI('prompt', 'api-key', 'claude-3-5-sonnet-20241022')
@@ -119,9 +117,41 @@ describe('callClaudeAPI', () => {
         fetchWithTimeout.mockResolvedValue({
             ok: false,
             status: 500,
-            json: () => Promise.resolve({ error: { message: 'Internal server error' } })
+            json: () => Promise.resolve({ error: 'Internal server error' })
         })
 
         await expect(callClaudeAPI('prompt', 'key', 'model')).rejects.toThrow('Internal server error')
+    })
+
+    it('serverToken이 있으면 Authorization 헤더로 전송', async () => {
+        fetchWithTimeout.mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ text: 'ok' })
+        })
+
+        await callClaudeAPI('p', 'k', 'claude-haiku-4-5-20251001', 'token-abc')
+
+        expect(fetchWithTimeout).toHaveBeenCalledWith(
+            '/api/evaluate',
+            expect.objectContaining({
+                headers: expect.objectContaining({
+                    'Authorization': 'Bearer token-abc',
+                    'Content-Type': 'application/json'
+                })
+            }),
+            60000
+        )
+    })
+
+    it('serverToken 없으면 Authorization 헤더 없음', async () => {
+        fetchWithTimeout.mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ text: 'ok' })
+        })
+
+        await callClaudeAPI('p', 'k', 'claude-haiku-4-5-20251001')
+
+        const call = fetchWithTimeout.mock.calls[0]
+        expect(call[1].headers.Authorization).toBeUndefined()
     })
 })

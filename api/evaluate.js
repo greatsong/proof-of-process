@@ -1,5 +1,10 @@
 
 // GoogleGenerativeAI import removed to support Edge Runtime
+import { verifyToken, extractBearerToken } from './_lib/auth.js';
+import { validateEvaluateRequest } from './_lib/validation.js';
+import { isAllowedOrigin, defaultAllowlist } from './_lib/origin.js';
+import { checkRateLimit } from './_lib/rateLimit.js';
+import { labelChatTranscript } from './_lib/labeler.js';
 
 const SERVER_KEYS = {
     gemini: process.env.GEMINI_API_KEY || '',
@@ -11,10 +16,21 @@ export const config = {
     runtime: 'edge',
 };
 
+const RATE_LIMIT_PER_TOKEN = 60;
+const RATE_LIMIT_WINDOW_SEC = 60 * 60;
+
 // Learning-Oriented System Prompt
 const LEARNING_SYSTEM_PROMPT = `
 당신은 AI 교육 평가 전문가입니다.
 첨부된 채팅 로그를 "학습 참여도(Learning Engagement)"와 "인지적 마찰(Cognitive Friction)" 관점에서 분석하십시오.
+
+# 0. 화자 식별 규칙 (매우 중요)
+입력 로그는 [학생] / [AI] / [AI?] / [?] 라벨이 줄 앞에 붙어있습니다.
+- [학생] 으로 시작하는 줄만 학습자의 발화입니다. 이것만 평가 대상입니다.
+- [AI], [AI?] 로 시작하는 줄은 AI 발화입니다. 절대로 학습자에게 귀속하지 마십시오.
+- [?] 로 시작하는 줄은 화자 미상입니다. 인용하지 말고 평가 근거로 쓰지 마십시오.
+- "~할까요?", "~드릴게요", "~제안드립니다", "~하시면 됩니다" 등 정중·제안조는 AI 발화의 시그니처입니다.
+- qualitativeEvaluation의 「」 직접 인용은 반드시 [학생] 라벨이 붙은 줄에서만 가져오십시오.
 
 # 1. 상호작용 패턴 분류 (Interaction Patterns)
 사용자의 행동을 다음 4가지 모드 중 하나로 분류하십시오:
@@ -40,13 +56,69 @@ const LEARNING_SYSTEM_PROMPT = `
 }
 `;
 
+function jsonResponse(status, body, extraHeaders) {
+    return new Response(JSON.stringify(body), {
+        status,
+        headers: { 'Content-Type': 'application/json', ...(extraHeaders || {}) }
+    });
+}
+
 export default async function handler(req) {
     if (req.method !== 'POST') {
-        return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+        return jsonResponse(405, { error: 'Method not allowed' });
+    }
+
+    // === 보안 게이트 ===
+
+    // 1. Origin 화이트리스트 (봇 1차 차단)
+    const origin = req.headers.get('origin') || req.headers.get('referer') || '';
+    if (!isAllowedOrigin(origin, defaultAllowlist(process.env))) {
+        return jsonResponse(403, { error: '허용되지 않은 Origin입니다.' });
+    }
+
+    // 2. Bearer JWT 인증
+    const jwtSecret = process.env.JWT_SECRET || '';
+    if (!jwtSecret) {
+        return jsonResponse(503, { error: '서버 인증 설정이 누락되었습니다. (JWT_SECRET 미설정)' });
+    }
+    const token = extractBearerToken(req);
+    if (!token) {
+        return jsonResponse(401, { error: '인증 토큰이 없습니다. PIN으로 잠금 해제 후 다시 시도하세요.' });
+    }
+    let claims;
+    try {
+        claims = await verifyToken(token, jwtSecret);
+    } catch (e) {
+        return jsonResponse(401, { error: `인증 토큰이 유효하지 않습니다: ${e.message}` });
+    }
+
+    // 3. Body 파싱 + 스키마 검증 (LLM 호출 전)
+    let rawBody;
+    try {
+        rawBody = await req.json();
+    } catch {
+        return jsonResponse(400, { error: '요청 본문이 올바른 JSON이 아닙니다.' });
+    }
+    const v = validateEvaluateRequest(rawBody);
+    if (!v.ok) {
+        return jsonResponse(v.status, { error: v.error });
+    }
+
+    // 4. Rate limit (토큰별 시간당 한도)
+    const rlKey = `rl:eval:${claims.sub || 'anon'}`;
+    const rl = await checkRateLimit(rlKey, RATE_LIMIT_PER_TOKEN, RATE_LIMIT_WINDOW_SEC);
+    if (!rl.allowed) {
+        const retryAfter = Math.max(1, rl.resetAt - Math.floor(Date.now() / 1000));
+        return jsonResponse(429, {
+            error: `요청 한도 초과 (시간당 ${RATE_LIMIT_PER_TOKEN}회). 잠시 후 다시 시도하세요.`
+        }, { 'Retry-After': String(retryAfter) });
     }
 
     try {
-        const { prompt, provider = 'gemini', model, apiKey: singleApiKey, apiKeys: clientApiKeys = {} } = await req.json();
+        const { provider, model, apiKey: singleApiKey, apiKeys: clientApiKeys = {} } = v.data;
+
+        // 5. 화자 라벨링 — LLM이 화자 추측에 의존하지 않도록 정규화
+        const prompt = labelChatTranscript(v.data.prompt);
 
         // Helper for handling timeouts - return null instead of throwing to allow partial success
         const withTimeout = (promise, ms) => Promise.race([
@@ -54,9 +126,9 @@ export default async function handler(req) {
             new Promise((resolve) => setTimeout(() => resolve(null), ms))
         ]);
 
-        const TIMEOUT_MS = 25000; // Increased to 25s for better analysis (Vercel max is 30s/60s depending on plan, but Edge is 30s)
+        const TIMEOUT_MS = 25000;
 
-        // 1. Ensemble Mode
+        // === Ensemble Mode ===
         if (provider === 'ensemble') {
             const results = await Promise.allSettled([
                 withTimeout(callProvider('gemini', prompt, clientApiKeys.gemini || SERVER_KEYS.gemini, 'gemini-2.5-flash'), TIMEOUT_MS),
@@ -74,19 +146,16 @@ export default async function handler(req) {
 
             const synthesizedText = synthesizeResults(successfulResults);
 
-            return new Response(JSON.stringify({ text: synthesizedText }), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' }
-            });
+            return jsonResponse(200, { text: synthesizedText });
         }
 
-        // 2. Single Provider Mode
+        // === Single Provider Mode ===
         const effectiveApiKey = singleApiKey || clientApiKeys[provider] || SERVER_KEYS[provider];
 
         if (!effectiveApiKey) {
-            return new Response(JSON.stringify({
+            return jsonResponse(500, {
                 error: `서버에 ${provider} API 키가 설정되지 않았습니다. Vercel 대시보드에서 환경변수를 설정한 후 재배포하세요. (필요한 변수: ${provider === 'gemini' ? 'GEMINI_API_KEY' : provider === 'claude' ? 'CLAUDE_API_KEY' : 'OPENAI_API_KEY'})`
-            }), { status: 500 });
+            });
         }
 
         const resultText = await withTimeout(
@@ -94,14 +163,11 @@ export default async function handler(req) {
             TIMEOUT_MS
         );
 
-        return new Response(JSON.stringify({ text: resultText }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-        });
+        return jsonResponse(200, { text: resultText });
 
     } catch (error) {
         console.error('API Error:', error);
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+        return jsonResponse(500, { error: error.message });
     }
 }
 

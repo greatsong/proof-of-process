@@ -1,11 +1,13 @@
 
 import { kv } from '@vercel/kv';
+import { signToken } from './_lib/auth.js';
 
 export const config = {
     runtime: 'edge',
 };
 
 const CONFIG_KEY = 'AI_EVAL_GLOBAL_CONFIG';
+const TOKEN_TTL_SEC = 4 * 60 * 60; // 4시간
 
 export default async function handler(req) {
     // GET: Retrieve Global Config
@@ -28,11 +30,26 @@ export default async function handler(req) {
         try {
             const body = await req.json();
 
-            // PIN unlock: 서버에서 PIN 검증 후 서버 키 사용 권한 부여
+            // PIN unlock: PIN 검증 후 단기 JWT 발급
             if (body.action === 'unlock') {
                 const validPin = process.env.SECRET_API_PIN || '';
+                const jwtSecret = process.env.JWT_SECRET || '';
+
                 if (body.pin === validPin && validPin !== '') {
-                    return new Response(JSON.stringify({ unlocked: true }), {
+                    let token = null;
+                    let expiresAt = null;
+                    try {
+                        if (jwtSecret) {
+                            token = await signToken({ sub: 'pin-user' }, jwtSecret, TOKEN_TTL_SEC);
+                            expiresAt = Math.floor(Date.now() / 1000) + TOKEN_TTL_SEC;
+                        } else {
+                            console.warn('JWT_SECRET not configured — unlock without token');
+                        }
+                    } catch (e) {
+                        console.error('Token sign failed:', e);
+                    }
+
+                    return new Response(JSON.stringify({ unlocked: true, token, expiresAt }), {
                         status: 200,
                         headers: { 'Content-Type': 'application/json' }
                     });

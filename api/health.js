@@ -2,7 +2,7 @@ export const config = {
     runtime: 'edge',
 };
 
-const REQUIRED_VARS = ['GEMINI_API_KEY', 'CLAUDE_API_KEY', 'OPENAI_API_KEY', 'SECRET_API_PIN'];
+const REQUIRED_VARS = ['GEMINI_API_KEY', 'CLAUDE_API_KEY', 'OPENAI_API_KEY', 'SECRET_API_PIN', 'JWT_SECRET'];
 
 export default async function handler() {
     const envStatus = {};

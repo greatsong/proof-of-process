@@ -19,7 +19,7 @@ const CHECK_ONLY = process.argv.includes('--check-only')
 
 const EXPECTED_PROJECT = 'proofai'
 const EXPECTED_DOMAIN = 'pro-of-ai.vercel.app'
-const REQUIRED_ENV_VARS = ['GEMINI_API_KEY', 'CLAUDE_API_KEY', 'OPENAI_API_KEY', 'SECRET_API_PIN']
+const REQUIRED_ENV_VARS = ['GEMINI_API_KEY', 'CLAUDE_API_KEY', 'OPENAI_API_KEY', 'SECRET_API_PIN', 'JWT_SECRET']
 
 function log(msg) { console.log(`\x1b[36m[deploy]\x1b[0m ${msg}`) }
 function warn(msg) { console.log(`\x1b[33m[경고]\x1b[0m ${msg}`) }
