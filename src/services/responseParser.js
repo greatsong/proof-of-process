@@ -4,6 +4,30 @@
 import { calculateGrade } from '../constants'
 
 /**
+ * 루브릭 가중치 기반 총점 계산.
+ *
+ * LLM은 "각 항목 점수에 가중치를 적용해 100점 환산"하라는 지시를 받지만
+ * 실측 결과 이 가중합 계산을 종종 틀린다 (예: 4개 항목이 각각 40/40/20/60%인데
+ * totalScore를 62로 응답 — 정답은 41). 총점은 결정적으로 계산 가능하므로
+ * AI의 산술에 의존하지 않고 코드에서 직접 구한다.
+ */
+function computeWeightedTotal(criteriaScores, rubric) {
+    if (!rubric?.criteria?.length || criteriaScores.length === 0) return null
+
+    let weightedSum = 0
+    let totalWeight = 0
+    for (const criterion of rubric.criteria) {
+        const cs = criteriaScores.find(c => c.criterionId === criterion.id)
+        if (!cs || !criterion.weight) continue
+        weightedSum += cs.percentage * criterion.weight
+        totalWeight += criterion.weight
+    }
+
+    if (totalWeight === 0) return null
+    return Math.round(weightedSum / totalWeight)
+}
+
+/**
  * 평가 응답 파싱
  */
 export function parseEvaluationResponse(response, rubric) {
@@ -23,30 +47,37 @@ export function parseEvaluationResponse(response, rubric) {
         if (!jsonStr) throw new Error('Empty JSON string')
         const result = JSON.parse(jsonStr)
 
+        const criteriaScores = (result.criteriaScores || []).map((cs) => {
+            // Percentage 자동 계산 (AI가 누락할 경우 대비)
+            const safeScore = cs.score || 0
+            const safeMax = cs.maxScore || 5
+            const calculatedPercentage = Math.round((safeScore / safeMax) * 100)
+
+            return {
+                criterionId: cs.criterionId || '',
+                name: cs.name || '',
+                score: safeScore,
+                maxScore: safeMax,
+                percentage: cs.percentage !== undefined ? cs.percentage : calculatedPercentage,
+                evidence: cs.evidence || cs.feedback || '근거가 제공되지 않았습니다.',
+                strengths: cs.strengths || '',
+                weaknesses: cs.weaknesses || '',
+                improvement: cs.improvement || '추가적인 개선 제안이 없습니다.',
+                nextSteps: cs.nextSteps || '',
+                feedback: cs.feedback || ''
+            }
+        })
+
+        // AI가 계산한 totalScore 대신, 항목별 점수와 루브릭 가중치로 직접 재계산한다.
+        // 가중치 매칭이 불가능한 경우(커스텀 루브릭 등)에만 AI 값으로 폴백.
+        const weightedTotal = computeWeightedTotal(criteriaScores, rubric)
+        const totalScore = weightedTotal !== null ? weightedTotal : (result.totalScore || 0)
+
         // 필수 필드 검증 및 기본값 설정
         return {
-            totalScore: result.totalScore || 0,
-            grade: result.grade || 'N/A',
-            criteriaScores: (result.criteriaScores || []).map((cs) => {
-                // Percentage 자동 계산 (AI가 누락할 경우 대비)
-                const safeScore = cs.score || 0
-                const safeMax = cs.maxScore || 5
-                const calculatedPercentage = Math.round((safeScore / safeMax) * 100)
-
-                return {
-                    criterionId: cs.criterionId || '',
-                    name: cs.name || '',
-                    score: safeScore,
-                    maxScore: safeMax,
-                    percentage: cs.percentage !== undefined ? cs.percentage : calculatedPercentage,
-                    evidence: cs.evidence || cs.feedback || '근거가 제공되지 않았습니다.',
-                    strengths: cs.strengths || '',
-                    weaknesses: cs.weaknesses || '',
-                    improvement: cs.improvement || '추가적인 개선 제안이 없습니다.',
-                    nextSteps: cs.nextSteps || '',
-                    feedback: cs.feedback || ''
-                }
-            }),
+            totalScore,
+            grade: calculateGrade(totalScore) || result.grade || 'N/A',
+            criteriaScores,
             characteristics: result.characteristics || [],
             conversationFlow: result.conversationFlow || '',
             qualitativeEvaluation: result.qualitativeEvaluation || '',

@@ -305,7 +305,7 @@ describe('EduFlow 응답 파싱 호환성', () => {
 
         const result = parseEvaluationResponse(mockResponse, rubric)
 
-        expect(result.totalScore).toBe(78)
+        expect(result.totalScore).toBe(75)
         expect(result.criteriaScores).toHaveLength(4)
         expect(result.criteriaScores[0].name).toBe('자기주도성')
         expect(result.criteriaScores[3].name).toBe('내용 이해')
@@ -334,7 +334,7 @@ describe('EduFlow 응답 파싱 호환성', () => {
         // responseParser는 현재 ethicsCheck를 별도 처리하지 않음
         // 추후 ethicsCheck 지원 추가 시 이 테스트 업데이트 필요
         expect(result.criteriaScores).toHaveLength(4)
-        expect(result.totalScore).toBe(78)
+        expect(result.totalScore).toBe(75)
     })
 })
 

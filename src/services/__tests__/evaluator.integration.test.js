@@ -40,8 +40,8 @@ describe('evaluateChat 통합 테스트', () => {
             apiSettings: baseSettings,
         })
 
-        expect(result.totalScore).toBe(85)
-        expect(result.grade).toBe('B+')
+        expect(result.totalScore).toBe(75)
+        expect(result.grade).toBe('C+')
         expect(result.criteriaScores).toHaveLength(4)
         expect(mockAPI).toHaveBeenCalledTimes(1)
     })
@@ -154,7 +154,7 @@ describe('evaluateChat 통합 테스트', () => {
             apiSettings: baseSettings,
         })
 
-        expect(result.totalScore).toBe(85)
+        expect(result.totalScore).toBe(75)
         expect(mockAPI).toHaveBeenCalledTimes(2)
     })
 
@@ -174,7 +174,7 @@ describe('evaluateChat 통합 테스트', () => {
             apiSettings: baseSettings,
         })
 
-        expect(result.totalScore).toBe(85)
+        expect(result.totalScore).toBe(75)
         expect(fetchWithTimeout).toHaveBeenCalled()
     })
 
@@ -209,11 +209,11 @@ describe('evaluateChat 통합 테스트', () => {
             apiSettings: { ...baseSettings, apiKeys: { gemini: '' } },
         })
 
-        expect(result.totalScore).toBe(85)
+        expect(result.totalScore).toBe(75)
         expect(fetchWithTimeout).toHaveBeenCalledWith(
             '/api/evaluate',
             expect.any(Object),
-            30000
+            65000
         )
     })
 })

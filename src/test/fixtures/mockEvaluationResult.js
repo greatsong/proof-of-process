@@ -1,6 +1,9 @@
+// totalScore/grade는 아래 criteriaScores(80/80/60/80%, 가중치 25%씩 균등)의
+// 가중평균과 일치해야 한다 (parseEvaluationResponse가 이제 이 값을 직접 재계산하므로):
+// (80+80+60+80)/4 = 75 → 등급 C+ (GRADE_THRESHOLDS 기준)
 export const mockEvaluationResult = {
-    totalScore: 85,
-    grade: 'B+',
+    totalScore: 75,
+    grade: 'C+',
     criteriaScores: [
         {
             criterionId: 'c1',

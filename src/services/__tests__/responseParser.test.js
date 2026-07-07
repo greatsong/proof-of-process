@@ -6,21 +6,21 @@ import { mockEvaluationResult, mockEvaluationResultJSON, mockEvaluationResultInC
 describe('parseEvaluationResponse', () => {
     it('정상 JSON 문자열 파싱 → 올바른 result 객체 반환', () => {
         const result = parseEvaluationResponse(mockEvaluationResultJSON, mockRubric)
-        expect(result.totalScore).toBe(85)
-        expect(result.grade).toBe('B+')
+        expect(result.totalScore).toBe(75)
+        expect(result.grade).toBe('C+')
         expect(result.criteriaScores).toHaveLength(4)
     })
 
     it('```json ... ``` 마크다운 코드블록 내 JSON 추출', () => {
         const result = parseEvaluationResponse(mockEvaluationResultInCodeBlock, mockRubric)
-        expect(result.totalScore).toBe(85)
+        expect(result.totalScore).toBe(75)
         expect(result.criteriaScores).toHaveLength(4)
     })
 
     it('``` ... ``` (json 키워드 없이) 코드블록 추출', () => {
         const response = '```\n' + mockEvaluationResultJSON + '\n```'
         const result = parseEvaluationResponse(response, mockRubric)
-        expect(result.totalScore).toBe(85)
+        expect(result.totalScore).toBe(75)
     })
 
     it('totalScore 누락 시 기본값 0', () => {
@@ -29,10 +29,10 @@ describe('parseEvaluationResponse', () => {
         expect(result.totalScore).toBe(0)
     })
 
-    it('grade 누락 시 기본값 N/A', () => {
+    it('grade 누락 시 totalScore 기준으로 계산됨 (criteriaScores 없어 가중치 재계산 불가 → AI totalScore 그대로 사용)', () => {
         const json = JSON.stringify({ totalScore: 80, criteriaScores: [] })
         const result = parseEvaluationResponse(json, mockRubric)
-        expect(result.grade).toBe('N/A')
+        expect(result.grade).toBe('B')
     })
 
     it('criteriaScores 빈 배열일 때 빈 배열 반환', () => {

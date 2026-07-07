@@ -128,11 +128,12 @@ async function callServerProxy({ prompt, provider, model, serverToken }) {
     const headers = { 'Content-Type': 'application/json' }
     if (serverToken) headers.Authorization = `Bearer ${serverToken}`
 
+    // 서버(/api/evaluate)의 maxDuration은 60초 — 클라이언트 타임아웃을 그보다 여유 있게 둔다.
     const response = await fetchWithTimeout('/api/evaluate', {
         method: 'POST',
         headers,
         body: JSON.stringify({ prompt, provider, model })
-    }, 30000)
+    }, 65000)
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({}))

@@ -172,5 +172,6 @@ ${ethicsCheckJson}  "studentRecordDraft": "생활기록부 작성용 초안 (학
 5. totalScore는 각 항목 점수에 가중치를 적용한 100점 만점 환산 점수입니다.
 6. evidence, strengths, weaknesses, improvement 필드는 **빈 문자열("")이면 안 됩니다**. 반드시 내용을 채워주세요.
 7. nextSteps는 해당 항목 점수가 3점 이하일 때만 채우고, 4점 이상이면 빈 문자열("")로 두세요.
-8. 반드시 유효한 JSON 형식으로 응답해주세요. 주석은 포함하지 마세요.${ethicsInstruction}`
+8. 반드시 유효한 JSON 형식으로 응답해주세요. 주석은 포함하지 마세요.${ethicsInstruction}
+9. **분량 제한 (응답 속도를 위해 중요!)**: evidence, strengths, weaknesses, improvement, nextSteps는 각각 **1~2문장 이내**로 간결하게 작성하세요. qualitativeEvaluation은 3~4문장, studentRecordDraft는 3~4문장을 넘지 마세요. 장황한 설명보다 핵심 근거와 인용에 집중하세요.`
 }

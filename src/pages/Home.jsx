@@ -57,6 +57,10 @@ function Home() {
             setLoadingMessage('마무리 정리 중입니다... (Finalizing)')
         }, 20000))
 
+        timers.push(setTimeout(() => {
+            setLoadingMessage('조금만 더 기다려주세요, 꼼꼼히 평가하고 있어요... (Almost done)')
+        }, 35000))
+
         return () => timers.forEach(clearTimeout)
     }, [isLoading])
 
@@ -265,7 +269,7 @@ function Home() {
                         <div className="loading-content">
                             <div className="spinner"></div>
                             <p className="loading-text">{loadingMessage}</p>
-                            <p className="loading-hint">약 10-30초 정도 소요됩니다</p>
+                            <p className="loading-hint">약 15~50초 정도 소요됩니다</p>
                         </div>
                     </div>
                 )}

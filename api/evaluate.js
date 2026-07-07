@@ -11,9 +11,10 @@ const SERVER_KEYS = {
     openai: process.env.OPENAI_API_KEY || ''
 };
 
-export const config = {
-    runtime: 'edge',
-};
+// Edge 런타임은 실행시간이 약 25초로 고정돼 있어 늘릴 수 없다.
+// Claude/Gemini가 상세한 평가 JSON을 생성하는 데 실측 28~42초가 걸려
+// Edge 한도를 넘기므로, Node.js 런타임 + maxDuration으로 전환한다.
+export const maxDuration = 60;
 
 const RATE_LIMIT_PER_TOKEN = 60;
 const RATE_LIMIT_WINDOW_SEC = 60 * 60;
@@ -101,8 +102,8 @@ export default async function handler(req) {
             new Promise((resolve) => setTimeout(() => resolve(null), ms))
         ]);
 
-        // Vercel Edge는 25초 내 최초 응답이 필수 — 내부 타임아웃은 여유를 두고 20초
-        const TIMEOUT_MS = 20000;
+        // maxDuration 60초 내에서 응답을 조립해 반환할 여유를 두고 50초로 설정
+        const TIMEOUT_MS = 50000;
 
         // === Ensemble Mode ===
         if (provider === 'ensemble') {
@@ -177,7 +178,7 @@ async function callProvider(provider, prompt, apiKey, model) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: INTERACTION_MODE_SYSTEM_PROMPT + "\n\n" + prompt }] }],
-                generationConfig: { temperature: 0.3, maxOutputTokens: 8192 }
+                generationConfig: { temperature: 0.3, maxOutputTokens: 4096 }
             })
         };
     } else if (provider === 'openai') {
@@ -196,7 +197,7 @@ async function callProvider(provider, prompt, apiKey, model) {
                     { role: 'user', content: prompt }
                 ],
                 temperature: 0.3,
-                max_tokens: 8192
+                max_tokens: 4096
             })
         };
     } else if (provider === 'claude') {
@@ -211,7 +212,7 @@ async function callProvider(provider, prompt, apiKey, model) {
             },
             body: JSON.stringify({
                 model: targetModel,
-                max_tokens: 8192,
+                max_tokens: 4096,
                 system: INTERACTION_MODE_SYSTEM_PROMPT,
                 messages: [{ role: 'user', content: prompt }]
             })

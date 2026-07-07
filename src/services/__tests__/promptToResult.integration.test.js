@@ -14,7 +14,7 @@ describe('prompts → responseParser → evidenceVerifier 파이프라인', () =
 
         // 2. 파싱
         const parsed = parseEvaluationResponse(mockEvaluationResultInCodeBlock, mockRubric)
-        expect(parsed.totalScore).toBe(85)
+        expect(parsed.totalScore).toBe(75)
         expect(parsed.criteriaScores).toHaveLength(4)
 
         // 3. 인용 검증
