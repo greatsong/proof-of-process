@@ -46,6 +46,7 @@ export function APIProvider({ children }) {
             // Migration: Google이 퇴역시킨 Gemini 모델(1.x/2.0)이 저장돼 있으면 2.5-flash로 교체
             if (/^gemini-(1\.|2\.0)/.test(initialSettings.models.gemini || '')) {
                 initialSettings.models.gemini = 'gemini-2.5-flash'
+                if (savedApiSettings) saveToStorage('apiSettings', initialSettings)
             }
 
             // Migration: Ensure apiKeys object exists
