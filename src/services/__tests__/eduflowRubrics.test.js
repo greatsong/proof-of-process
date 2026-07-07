@@ -299,8 +299,7 @@ describe('EduFlow 응답 파싱 호환성', () => {
             suggestions: [
                 'AI 응답을 실행하기 전에 "이게 맞을까?" 한 번 생각해보세요',
                 '완성 후 "이걸 더 발전시키려면?" 질문으로 확장해보세요'
-            ],
-            studentRecordDraft: 'VPython 3D 프로그래밍 활동에서 좌표계 개념을 능동적으로 탐구하며, AI 응답의 코드 오류를 스스로 발견하고 velocity 변수를 통한 애니메이션 개선을 직접 제안하는 등 자기주도적 학습 역량을 보임.'
+            ]
         })
 
         const result = parseEvaluationResponse(mockResponse, rubric)
@@ -309,7 +308,6 @@ describe('EduFlow 응답 파싱 호환성', () => {
         expect(result.criteriaScores).toHaveLength(4)
         expect(result.criteriaScores[0].name).toBe('자기주도성')
         expect(result.criteriaScores[3].name).toBe('내용 이해')
-        expect(result.studentRecordDraft).toContain('VPython')
     })
 
     it('ethicsCheck 필드가 파싱 결과에서 유지됨 (현재 구현 기준)', () => {
@@ -326,8 +324,7 @@ describe('EduFlow 응답 파싱 호환성', () => {
             ethicsCheck: { result: 'pass', reason: '이슈 없음' },
             characteristics: [],
             qualitativeEvaluation: '양호',
-            suggestions: [],
-            studentRecordDraft: ''
+            suggestions: []
         })
 
         const result = parseEvaluationResponse(mockResponse, rubric)

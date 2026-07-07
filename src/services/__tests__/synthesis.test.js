@@ -10,7 +10,6 @@ describe('synthesizeKRunResults', () => {
         qualitativeEvaluation: `평가-${score}`,
         conversationFlow: `흐름-${'x'.repeat(score)}`,
         suggestions: [`제안-${score}`],
-        studentRecordDraft: `기록-${'y'.repeat(score)}`,
     })
 
     it('결과 1개 → 그대로 반환 (평균 = 원본)', () => {
@@ -81,16 +80,6 @@ describe('synthesizeKRunResults', () => {
         ]
         const result = synthesizeKRunResults(results)
         expect(result.suggestions.length).toBeLessThanOrEqual(4)
-    })
-
-    it('studentRecordDraft: 가장 긴 것 선택', () => {
-        const results = [
-            { ...makeResult(80), studentRecordDraft: 'short' },
-            { ...makeResult(85), studentRecordDraft: 'this is the longest record draft available' },
-            { ...makeResult(90), studentRecordDraft: 'medium text' },
-        ]
-        const result = synthesizeKRunResults(results)
-        expect(result.studentRecordDraft).toBe('this is the longest record draft available')
     })
 
     it('conversationFlow: 가장 긴 것 선택', () => {

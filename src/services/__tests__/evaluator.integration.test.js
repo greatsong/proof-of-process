@@ -57,7 +57,6 @@ describe('evaluateChat 통합 테스트', () => {
             characteristics: ['test'],
             qualitativeEvaluation: '좋음',
             suggestions: ['제안'],
-            studentRecordDraft: '기록',
         })
 
         let callCount = 0
@@ -92,7 +91,6 @@ describe('evaluateChat 통합 테스트', () => {
                 characteristics: [],
                 qualitativeEvaluation: '',
                 suggestions: [],
-                studentRecordDraft: '',
             }))
         })
         getProvider.mockReturnValue(mockAPI)

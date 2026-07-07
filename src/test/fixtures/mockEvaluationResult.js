@@ -62,7 +62,6 @@ export const mockEvaluationResult = {
         '더 많은 후속 질문을 통해 깊이 있는 탐구를 해보세요',
         '학습한 내용을 실제 과제에 적용해보세요',
     ],
-    studentRecordDraft: 'AI 채팅 활용 역량이 우수하며, 맥락에 맞는 질문을 통해 효과적으로 정보를 수집하는 능력을 보여줌.',
 }
 
 export const mockEvaluationResultJSON = JSON.stringify(mockEvaluationResult, null, 2)

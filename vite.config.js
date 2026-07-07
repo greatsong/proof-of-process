@@ -27,8 +27,7 @@ export default defineConfig({
             ],
             characteristics: ['로컬 개발 목업 응답'],
             qualitativeEvaluation: '⚠️ 이것은 로컬 개발 환경의 목업 평가입니다. 실제 AI 평가는 Vercel 배포 환경에서 동작합니다.',
-            suggestions: ['배포 환경에서 실제 평가를 실행해보세요.'],
-            studentRecordDraft: '[로컬 목업] 생기부 초안 예시입니다.'
+            suggestions: ['배포 환경에서 실제 평가를 실행해보세요.']
           }
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify({ text: JSON.stringify(mockResult) }))

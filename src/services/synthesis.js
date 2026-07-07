@@ -77,11 +77,6 @@ export function synthesizeKRunResults(results) {
     const allSuggestions = results.flatMap(r => r.suggestions || [])
     const suggestions = [...new Set(allSuggestions)].slice(0, 4)
 
-    // Pick the longest student record draft
-    const studentRecordDraft = results
-        .map(r => r.studentRecordDraft || '')
-        .sort((a, b) => b.length - a.length)[0] || ''
-
     // Pick the longest conversation flow
     const conversationFlow = results
         .map(r => r.conversationFlow || '')
@@ -95,7 +90,6 @@ export function synthesizeKRunResults(results) {
         qualitativeEvaluation,
         conversationFlow,
         suggestions,
-        studentRecordDraft,
         evaluationMeta: {
             runs: n,
             scoreRange: { min: minScore, max: maxScore },

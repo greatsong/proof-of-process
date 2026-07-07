@@ -1,6 +1,6 @@
 /**
  * CriteriaDetail - 항목별 평가 (점수 바 + 상세 피드백),
- *                  정성적 평가, 개선 제안, 생활기록부 초안
+ *                  정성적 평가, 개선 제안
  */
 
 function getScoreBarWidth(score, maxScore = 5) {
@@ -54,7 +54,7 @@ function renderEvidence(text, verifications) {
     })
 }
 
-function CriteriaDetail({ criteriaScores, qualitativeEvaluation, suggestions, studentRecordDraft, copyToClipboard, selfEvalScores, verificationSummary, conversationFlow }) {
+function CriteriaDetail({ criteriaScores, qualitativeEvaluation, suggestions, selfEvalScores, verificationSummary, conversationFlow }) {
     return (
         <>
             {/* 인용 검증 요약 */}
@@ -204,26 +204,6 @@ function CriteriaDetail({ criteriaScores, qualitativeEvaluation, suggestions, st
                 </ul>
             </div>
 
-            {/* 생활기록부 초안 */}
-            {studentRecordDraft && (
-                <div className="student-record card">
-                    <div className="record-header">
-                        <h3>📄 프로젝트 과정 기록에 대한 평가(초안)</h3>
-                        <button
-                            onClick={() => copyToClipboard(studentRecordDraft)}
-                            className="btn btn-secondary btn-sm"
-                        >
-                            📋 복사
-                        </button>
-                    </div>
-                    <div className="record-content">
-                        {studentRecordDraft}
-                    </div>
-                    <p className="record-notice">
-                        ⚠️ 이 초안은 참고용이며, 실제 생활기록부 작성 시 교사의 검토와 수정이 필요합니다.
-                    </p>
-                </div>
-            )}
         </>
     )
 }

@@ -82,7 +82,6 @@ export function parseEvaluationResponse(response, rubric) {
             conversationFlow: result.conversationFlow || '',
             qualitativeEvaluation: result.qualitativeEvaluation || '',
             suggestions: result.suggestions || [],
-            studentRecordDraft: result.studentRecordDraft || '',
             ethicsCheck: result.ethicsCheck || null
         }
     } catch (error) {
@@ -102,8 +101,7 @@ export function parseEvaluationResponse(response, rubric) {
             })),
             characteristics: ['평가 결과 파싱 오류'],
             qualitativeEvaluation: `AI 응답을 파싱하는 중 오류가 발생했습니다.\n\n원본 응답:\n${response.substring(0, 500)}...`,
-            suggestions: ['다시 평가를 시도해 주세요.'],
-            studentRecordDraft: ''
+            suggestions: ['다시 평가를 시도해 주세요.']
         }
     }
 }

@@ -109,7 +109,6 @@ describe.skipIf(!CLAUDE_API_KEY)('실제 API 평가 테스트', () => {
         expect(result.criteriaScores).toHaveLength(4)
         expect(result.characteristics).toBeDefined()
         expect(result.qualitativeEvaluation).toBeTruthy()
-        expect(result.studentRecordDraft).toBeTruthy()
 
         // ─── 기준별 검증 ───
         const criteriaNames = result.criteriaScores.map(c => c.name)
@@ -152,7 +151,6 @@ describe.skipIf(!CLAUDE_API_KEY)('실제 API 평가 테스트', () => {
         }
         console.log('-'.repeat(60))
         console.log(`정성 평가: ${result.qualitativeEvaluation}`)
-        console.log(`생기부 초안: ${result.studentRecordDraft}`)
         console.log('='.repeat(60))
     }, 60000)
 

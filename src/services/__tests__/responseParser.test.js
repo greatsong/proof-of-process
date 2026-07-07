@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { parseEvaluationResponse } from '../responseParser'
 import { mockRubric } from '../../test/fixtures/mockRubric'
-import { mockEvaluationResult, mockEvaluationResultJSON, mockEvaluationResultInCodeBlock } from '../../test/fixtures/mockEvaluationResult'
+import { mockEvaluationResultJSON, mockEvaluationResultInCodeBlock } from '../../test/fixtures/mockEvaluationResult'
 
 describe('parseEvaluationResponse', () => {
     it('정상 JSON 문자열 파싱 → 올바른 result 객체 반환', () => {
@@ -93,12 +93,6 @@ describe('parseEvaluationResponse', () => {
         const result = parseEvaluationResponse('', mockRubric)
         expect(result.totalScore).toBe(0)
         expect(result.criteriaScores).toHaveLength(mockRubric.criteria.length)
-    })
-
-    it('studentRecordDraft 누락 시 빈 문자열', () => {
-        const json = JSON.stringify({ totalScore: 80, grade: 'B', criteriaScores: [] })
-        const result = parseEvaluationResponse(json, mockRubric)
-        expect(result.studentRecordDraft).toBe('')
     })
 
     it('suggestions 누락 시 빈 배열', () => {

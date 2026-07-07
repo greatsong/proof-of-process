@@ -661,43 +661,6 @@
     flex-shrink: 0;
 }
 
-/* Student Record */
-.student-record h3 {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
-}
-
-.record-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-4);
-}
-
-.record-content {
-    padding: var(--spacing-4);
-    background: var(--bg-secondary);
-    border-radius: var(--radius-lg);
-    font-family: var(--font-family);
-    line-height: var(--line-height-relaxed);
-    white-space: pre-wrap;
-    margin-bottom: var(--spacing-3);
-}
-
-.record-notice {
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-    padding: var(--spacing-3);
-    background: var(--color-warning-50);
-    border-radius: var(--radius-md);
-}
-
-@media (prefers-color-scheme: dark) {
-    .record-notice {
-        background: rgba(245, 158, 11, 0.1);
-    }
-}
-
 /* Responsive */
 @media (max-width: 768px) {
     .result-header {
@@ -881,7 +844,6 @@ body.is-pdf-rendering .characteristic-list li {
 body.is-pdf-rendering .result-header,
 body.is-pdf-rendering .result-actions,
 body.is-pdf-rendering .student-info-input,
-body.is-pdf-rendering .record-notice,
 body.is-pdf-rendering .btn,
 body.is-pdf-rendering .nav,
 body.is-pdf-rendering .header,
@@ -902,8 +864,7 @@ body.is-pdf-rendering .html2pdf__page-break {
 /* Detailed Evaluation Sections */
 body.is-pdf-rendering .criteria-scores,
 body.is-pdf-rendering .qualitative,
-body.is-pdf-rendering .suggestions,
-body.is-pdf-rendering .student-record {
+body.is-pdf-rendering .suggestions {
     padding: 0 !important;
     margin: 0 !important;
     border: none !important;
@@ -965,7 +926,6 @@ body.is-pdf-rendering * {
 
 body.is-pdf-rendering p,
 body.is-pdf-rendering .qualitative-content,
-body.is-pdf-rendering .record-content,
 body.is-pdf-rendering .info-value,
 body.is-pdf-rendering .detail-item p {
     white-space: pre-wrap !important;

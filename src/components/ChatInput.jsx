@@ -170,7 +170,7 @@ function ChatInput({ onSubmit, isLoading, disabled }) {
                         className="input textarea reflection-textarea"
                         value={reflection}
                         onChange={(e) => setReflection(e.target.value)}
-                        placeholder="AI 채팅에는 없지만 평가에 반영하고 싶은 내용을 적어주세요.&#10;예: '직접 손으로 흐름도를 그려서 프로젝트를 기획했습니다.', '추가로 관련 논문을 찾아 읽어보았습니다.'&#10;(이 내용은 점수에는 반영되지 않고, 생활기록부 초안과 피드백에만 반영됩니다)"
+                        placeholder="AI 채팅에는 없지만 평가에 반영하고 싶은 내용을 적어주세요.&#10;예: '직접 손으로 흐름도를 그려서 프로젝트를 기획했습니다.', '추가로 관련 논문을 찾아 읽어보았습니다.'&#10;(이 내용은 점수에는 반영되지 않고, 피드백에만 반영됩니다)"
                         disabled={isLoading || disabled}
                     />
                 </div>

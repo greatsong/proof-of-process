@@ -34,14 +34,15 @@ ${levelsDesc}`
         : ''
 
     const ethicsCheckJson = rubric.ethicsCheck
-        ? `  "ethicsCheck": {
+        ? `,
+  "ethicsCheck": {
     "result": "pass",
     "reason": "특별한 윤리적 이슈 없음 (문제 발견 시 사유 작성)"
-  },\n`
+  }`
         : ''
 
     const ethicsInstruction = rubric.ethicsCheck
-        ? `\n- **윤리적 활용 확인**: 특별한 이슈가 없으면 "pass"로 판정하세요. 명확한 위반이 있을 때만 "fail"로 판정하고 reason에 구체적 사유를 작성하세요.\n- ethicsCheck가 "fail"이어도 studentRecordDraft에는 윤리적 위반 사실이나 의혹을 직접 언급하지 마세요. 그 내용은 ethicsCheck 필드에서만 다루고, studentRecordDraft는 관찰된 학습 활동만 중립적으로 서술하세요.`
+        ? `\n- **윤리적 활용 확인**: 특별한 이슈가 없으면 "pass"로 판정하세요. 명확한 위반이 있을 때만 "fail"로 판정하고 reason에 구체적 사유를 작성하세요.`
         : ''
 
     // 대화 구조 파싱 시도
@@ -87,7 +88,7 @@ ${ethicsSection}
 # 학생 자기평가 / 추가 맥락 (Additional Context)
 ${reflection ? reflection : "(없음)"}
 
-⚠️ 주의: 위 '학생 자기평가' 내용은 **정성 평가(의견, 생활기록부)**에만 반영하고, **점수(Quantitative Score)** 산정에는 절대 반영하지 마세요. 점수는 오직 채팅 내용의 품질로만 평가하세요.
+⚠️ 주의: 위 '학생 자기평가' 내용은 **정성 평가(의견)**에만 반영하고, **점수(Quantitative Score)** 산정에는 절대 반영하지 마세요. 점수는 오직 채팅 내용의 품질로만 평가하세요.
 
 # 평가할 채팅 기록 (⚠️ 중요 지침)
 ${parsed
@@ -154,8 +155,7 @@ ${criteriaIdList}
   "suggestions": [
     "구체적인 실천 방안 1",
     "구체적인 실천 방안 2"
-  ],
-${ethicsCheckJson}  "studentRecordDraft": "나이스(NEIS) 생활기록부 문체(명사형 종결어미)로 작성한 초안. 예: '~을 시도함', '~하는 모습을 보임', '~능력을 갖춤'"
+  ]${ethicsCheckJson}
 }
 \`\`\`
 
@@ -173,10 +173,6 @@ ${ethicsCheckJson}  "studentRecordDraft": "나이스(NEIS) 생활기록부 문�
 6. evidence, strengths, weaknesses, improvement 필드는 **빈 문자열("")이면 안 됩니다**. 반드시 내용을 채워주세요.
 7. nextSteps는 해당 항목 점수가 3점 이하일 때만 채우고, 4점 이상이면 빈 문자열("")로 두세요.
 8. 반드시 유효한 JSON 형식으로 응답해주세요. 주석은 포함하지 마세요.${ethicsInstruction}
-9. **분량 제한 (응답 속도를 위해 중요!)**: evidence, strengths, weaknesses, improvement, nextSteps는 각각 **1~2문장 이내**로 간결하게 작성하세요. qualitativeEvaluation은 3~4문장, studentRecordDraft는 3~4문장을 넘지 마세요. 장황한 설명보다 핵심 근거와 인용에 집중하세요.
-10. **studentRecordDraft 문체 (매우 중요! 나이스 생활기록부 작성 규정)**:
-    - 모든 문장은 **명사형 종결어미**로 마치세요 (예: "~함", "~보임", "~드러냄", "~수행함", "~기름"). "~습니다", "~합니다" 같은 종결형 문장은 절대 쓰지 마세요.
-    - 학생의 인격·성격·품행에 대한 **부정적 가치판단이나 훈계는 절대 포함하지 마세요** (예: "책임감이 부족함", "부정직함", "성의가 없음" 등은 금지). 점수가 낮더라도 **관찰된 학습 행동을 있는 그대로 서술**하고, 성장 가능성을 덧붙이는 방식으로만 작성하세요.
-    - 예시 (저조한 활동): "AI가 제시한 코드를 검증 없이 활용하는 모습을 보였으며, 구체적인 목표 설정과 후속 질문을 통해 자기주도적 학습 태도를 기를 필요가 있음"
-11. **qualitativeEvaluation 톤**: 점수가 낮아도 학생을 비난하거나 낙담시키는 표현(예: "학습이 일어나기 어렵다", "바람직하지 않다")은 피하고, 관찰된 사실과 구체적인 다음 행동 제안 중심으로, 성장 가능성을 믿는 격려의 어조로 작성하세요.`
+9. **분량 제한 (응답 속도를 위해 중요!)**: evidence, strengths, weaknesses, improvement, nextSteps는 각각 **1~2문장 이내**로 간결하게 작성하세요. qualitativeEvaluation은 3~4문장을 넘지 마세요. 장황한 설명보다 핵심 근거와 인용에 집중하세요.
+10. **qualitativeEvaluation 톤 (이 보고서는 학생이 직접 읽습니다)**: 점수가 낮아도 학생을 비난하거나 낙담시키는 표현(예: "학습이 일어나기 어렵다", "바람직하지 않다")은 피하고, 관찰된 사실과 구체적인 다음 행동 제안 중심으로, 성장 가능성을 믿는 격려의 어조로 작성하세요.`
 }

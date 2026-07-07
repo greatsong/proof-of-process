@@ -32,18 +32,12 @@ function EvaluationResult({ result, rubric, onReset, apiSettings, selfEvalScores
         criteriaScores,
         qualitativeEvaluation,
         suggestions,
-        studentRecordDraft,
         verificationSummary,
         conversationFlow,
         ethicsCheck
     } = result
 
     const gradeColors = getGradeColor(grade)
-
-    const copyToClipboard = (text) => {
-        navigator.clipboard.writeText(text)
-        alert('클립보드에 복사되었습니다!')
-    }
 
     const downloadReport = async () => {
         try {
@@ -186,8 +180,6 @@ function EvaluationResult({ result, rubric, onReset, apiSettings, selfEvalScores
                     criteriaScores={criteriaScores}
                     qualitativeEvaluation={qualitativeEvaluation}
                     suggestions={suggestions}
-                    studentRecordDraft={studentRecordDraft}
-                    copyToClipboard={copyToClipboard}
                     selfEvalScores={selfEvalScores}
                     verificationSummary={verificationSummary}
                     conversationFlow={conversationFlow}
