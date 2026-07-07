@@ -126,7 +126,8 @@ export default async function handler(req) {
             new Promise((resolve) => setTimeout(() => resolve(null), ms))
         ]);
 
-        const TIMEOUT_MS = 25000;
+        // Vercel Edge는 25초 내 최초 응답이 필수 — 내부 타임아웃은 여유를 두고 20초
+        const TIMEOUT_MS = 20000;
 
         // === Ensemble Mode ===
         if (provider === 'ensemble') {
@@ -144,7 +145,7 @@ export default async function handler(req) {
                 .map(r => r.value);
 
             if (successfulResults.length === 0) {
-                throw new Error(`서버 평가 중 오류: 25초 내에 응답한 AI 모델이 없습니다.`);
+                throw new Error(`서버 평가 중 오류: 제한 시간 내에 응답한 AI 모델이 없습니다.`);
             }
 
             const synthesizedText = synthesizeResults(successfulResults);
@@ -172,6 +173,10 @@ export default async function handler(req) {
             callProvider(provider, prompt, effectiveApiKey, model),
             TIMEOUT_MS
         );
+
+        if (resultText === null) {
+            return jsonResponse(504, { error: 'AI 응답 시간이 초과되었습니다. 잠시 후 다시 시도하거나 다른 모델을 선택해주세요.' });
+        }
 
         return jsonResponse(200, { text: resultText });
 
