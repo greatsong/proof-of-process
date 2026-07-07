@@ -245,34 +245,33 @@ async function callProvider(provider, prompt, apiKey, model) {
         throw new Error(`Unknown provider: ${provider}`);
     }
 
-    // Gemini 3.5는 과부하 시 503 대신 응답이 한없이 지연되는 경우가 있어
-    // 10초 자체 제한을 걸고, 초과하면 2.5-flash로 폴백한다.
-    let response;
-    const isLatestGemini = provider === 'gemini' && targetModel !== 'gemini-2.5-flash';
-    if (isLatestGemini) {
-        const ac = new AbortController();
-        const timer = setTimeout(() => ac.abort(), 10000);
+    // Gemini 3.5는 과부하 시 503 또는 무기한 지연이 발생할 수 있다.
+    // 순차 폴백은 Edge 25초 한도 안에 끝나지 않으므로, 3.5와 2.5-flash를
+    // 동시에 호출해 먼저 성공한 결과를 사용한다 (3.5 정상화 시 3.5가 우선 도착).
+    if (provider === 'gemini' && targetModel !== 'gemini-2.5-flash') {
+        const attempts = [
+            fetchProviderText('gemini', url, options),
+            callProvider('gemini', prompt, apiKey, 'gemini-2.5-flash')
+        ];
         try {
-            response = await fetch(url, { ...options, signal: ac.signal });
-        } catch {
-            console.warn(`gemini ${targetModel} 응답 지연(10초 초과) → gemini-2.5-flash 폴백`);
-            return callProvider('gemini', prompt, apiKey, 'gemini-2.5-flash');
-        } finally {
-            clearTimeout(timer);
+            return await Promise.any(attempts);
+        } catch (aggregate) {
+            throw aggregate.errors?.[0] || new Error('gemini Error: 모든 모델 호출이 실패했습니다.');
         }
-    } else {
-        response = await fetch(url, options);
     }
+
+    return fetchProviderText(provider, url, options);
+}
+
+/**
+ * fetch 실행 후 프로바이더별 텍스트 추출
+ */
+async function fetchProviderText(provider, url, options) {
+    const response = await fetch(url, options);
 
     if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
         const errMsg = errData.error?.message || String(response.status);
-        // Gemini 최신 모델이 과부하(503 high demand)면 2.5-flash로 1회 폴백
-        if (provider === 'gemini' && targetModel !== 'gemini-2.5-flash'
-            && (response.status === 503 || /high demand|overloaded|UNAVAILABLE/i.test(errMsg))) {
-            console.warn(`gemini ${targetModel} 과부하 → gemini-2.5-flash 폴백:`, errMsg);
-            return callProvider('gemini', prompt, apiKey, 'gemini-2.5-flash');
-        }
         throw new Error(`${provider} Error: ${errMsg}`);
     }
 
