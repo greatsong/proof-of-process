@@ -187,10 +187,10 @@ export default async function handler(req) {
 async function callProvider(provider, prompt, apiKey, model) {
     if (!apiKey) throw new Error(`서버에 ${provider} API 키가 없습니다. Vercel 환경변수 설정 후 재배포 필요.`);
 
-    let url, options;
+    let url, options, targetModel;
 
     if (provider === 'gemini') {
-        const targetModel = model || 'gemini-3.5-flash';
+        targetModel = model || 'gemini-3.5-flash';
         url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey}`;
         options = {
             method: 'POST',
@@ -201,7 +201,7 @@ async function callProvider(provider, prompt, apiKey, model) {
             })
         };
     } else if (provider === 'openai') {
-        const targetModel = model || 'gpt-4o';
+        targetModel = model || 'gpt-4o';
         url = 'https://api.openai.com/v1/chat/completions';
         options = {
             method: 'POST',
@@ -220,7 +220,7 @@ async function callProvider(provider, prompt, apiKey, model) {
             })
         };
     } else if (provider === 'claude') {
-        const targetModel = model || 'claude-haiku-4-5-20251001';
+        targetModel = model || 'claude-haiku-4-5-20251001';
         url = 'https://api.anthropic.com/v1/messages';
         options = {
             method: 'POST',
@@ -244,7 +244,14 @@ async function callProvider(provider, prompt, apiKey, model) {
 
     if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(`${provider} Error: ${errData.error?.message || response.status}`);
+        const errMsg = errData.error?.message || String(response.status);
+        // Gemini 최신 모델이 과부하(503 high demand)면 2.5-flash로 1회 폴백
+        if (provider === 'gemini' && targetModel !== 'gemini-2.5-flash'
+            && (response.status === 503 || /high demand|overloaded|UNAVAILABLE/i.test(errMsg))) {
+            console.warn(`gemini ${targetModel} 과부하 → gemini-2.5-flash 폴백:`, errMsg);
+            return callProvider('gemini', prompt, apiKey, 'gemini-2.5-flash');
+        }
+        throw new Error(`${provider} Error: ${errMsg}`);
     }
 
     const data = await response.json();
