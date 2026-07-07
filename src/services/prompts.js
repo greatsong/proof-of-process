@@ -41,7 +41,7 @@ ${levelsDesc}`
         : ''
 
     const ethicsInstruction = rubric.ethicsCheck
-        ? `\n9. **윤리적 활용 확인**: 특별한 이슈가 없으면 "pass"로 판정하세요. 명확한 위반이 있을 때만 "fail"로 판정하고 reason에 구체적 사유를 작성하세요.`
+        ? `\n- **윤리적 활용 확인**: 특별한 이슈가 없으면 "pass"로 판정하세요. 명확한 위반이 있을 때만 "fail"로 판정하고 reason에 구체적 사유를 작성하세요.\n- ethicsCheck가 "fail"이어도 studentRecordDraft에는 윤리적 위반 사실이나 의혹을 직접 언급하지 마세요. 그 내용은 ethicsCheck 필드에서만 다루고, studentRecordDraft는 관찰된 학습 활동만 중립적으로 서술하세요.`
         : ''
 
     // 대화 구조 파싱 시도
@@ -155,7 +155,7 @@ ${criteriaIdList}
     "구체적인 실천 방안 1",
     "구체적인 실천 방안 2"
   ],
-${ethicsCheckJson}  "studentRecordDraft": "생활기록부 작성용 초안 (학생의 자기평가 내용이 있다면 이를 포함하여, 구체적인 활동 맥락이 드러나도록 3-4문장으로 작성)"
+${ethicsCheckJson}  "studentRecordDraft": "나이스(NEIS) 생활기록부 문체(명사형 종결어미)로 작성한 초안. 예: '~을 시도함', '~하는 모습을 보임', '~능력을 갖춤'"
 }
 \`\`\`
 
@@ -173,5 +173,10 @@ ${ethicsCheckJson}  "studentRecordDraft": "생활기록부 작성용 초안 (학
 6. evidence, strengths, weaknesses, improvement 필드는 **빈 문자열("")이면 안 됩니다**. 반드시 내용을 채워주세요.
 7. nextSteps는 해당 항목 점수가 3점 이하일 때만 채우고, 4점 이상이면 빈 문자열("")로 두세요.
 8. 반드시 유효한 JSON 형식으로 응답해주세요. 주석은 포함하지 마세요.${ethicsInstruction}
-9. **분량 제한 (응답 속도를 위해 중요!)**: evidence, strengths, weaknesses, improvement, nextSteps는 각각 **1~2문장 이내**로 간결하게 작성하세요. qualitativeEvaluation은 3~4문장, studentRecordDraft는 3~4문장을 넘지 마세요. 장황한 설명보다 핵심 근거와 인용에 집중하세요.`
+9. **분량 제한 (응답 속도를 위해 중요!)**: evidence, strengths, weaknesses, improvement, nextSteps는 각각 **1~2문장 이내**로 간결하게 작성하세요. qualitativeEvaluation은 3~4문장, studentRecordDraft는 3~4문장을 넘지 마세요. 장황한 설명보다 핵심 근거와 인용에 집중하세요.
+10. **studentRecordDraft 문체 (매우 중요! 나이스 생활기록부 작성 규정)**:
+    - 모든 문장은 **명사형 종결어미**로 마치세요 (예: "~함", "~보임", "~드러냄", "~수행함", "~기름"). "~습니다", "~합니다" 같은 종결형 문장은 절대 쓰지 마세요.
+    - 학생의 인격·성격·품행에 대한 **부정적 가치판단이나 훈계는 절대 포함하지 마세요** (예: "책임감이 부족함", "부정직함", "성의가 없음" 등은 금지). 점수가 낮더라도 **관찰된 학습 행동을 있는 그대로 서술**하고, 성장 가능성을 덧붙이는 방식으로만 작성하세요.
+    - 예시 (저조한 활동): "AI가 제시한 코드를 검증 없이 활용하는 모습을 보였으며, 구체적인 목표 설정과 후속 질문을 통해 자기주도적 학습 태도를 기를 필요가 있음"
+11. **qualitativeEvaluation 톤**: 점수가 낮아도 학생을 비난하거나 낙담시키는 표현(예: "학습이 일어나기 어렵다", "바람직하지 않다")은 피하고, 관찰된 사실과 구체적인 다음 행동 제안 중심으로, 성장 가능성을 믿는 격려의 어조로 작성하세요.`
 }
