@@ -85,10 +85,10 @@ evidence 필드에는 가능하면 **"턴 N에서"**를 명시하여 시계열�
 
 ${criteriaDescription}
 ${ethicsSection}
-# 학생 자기평가 / 추가 맥락 (Additional Context)
+# 학생이 제공한 추가 맥락 (Additional Context)
 ${reflection ? reflection : "(없음)"}
 
-⚠️ 주의: 위 '학생 자기평가' 내용은 **정성 평가(의견)**에만 반영하고, **점수(Quantitative Score)** 산정에는 절대 반영하지 마세요. 점수는 오직 채팅 내용의 품질로만 평가하세요.
+⚠️ 주의: 위 '추가 맥락'은 학생이 대화 밖의 자기 활동·의도를 설명한 내용입니다. **정성 평가(의견)**에만 참고하고, **점수(Quantitative Score)** 산정에는 반영하지 마세요. 점수는 오직 채팅 내용의 품질로만 평가하세요.
 
 # 평가할 채팅 기록 (⚠️ 중요 지침)
 ${parsed
@@ -151,7 +151,7 @@ ${criteriaIdList}
     "특징 3"
   ],${parsed ? `
   "conversationFlow": "대화 흐름 요약: 초반에는 ~했으나, 턴 N부터 ~로 변화했다. 전환점은 턴 N이다.",` : ''}
-  "qualitativeEvaluation": "전반적인 정성 평가. 학생의 강점과 성장 가능성을 중심으로 작성. (학생의 자기평가 내용도 참고하여 격려)",
+  "qualitativeEvaluation": "전반적인 정성 평가. 학생의 강점과 성장 가능성을 중심으로 작성. (학생이 제공한 추가 맥락도 참고하여 격려)",
   "suggestions": [
     "구체적인 실천 방안 1",
     "구체적인 실천 방안 2"
