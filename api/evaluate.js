@@ -14,7 +14,9 @@ const SERVER_KEYS = {
 // Edge 런타임은 실행시간이 약 25초로 고정돼 있어 늘릴 수 없다.
 // Claude/Gemini가 상세한 평가 JSON을 생성하는 데 실측 28~42초가 걸려
 // Edge 한도를 넘기므로, Node.js 런타임 + maxDuration으로 전환한다.
-export const maxDuration = 60;
+export const config = {
+    maxDuration: 60,
+};
 
 const RATE_LIMIT_PER_TOKEN = 60;
 const RATE_LIMIT_WINDOW_SEC = 60 * 60;
