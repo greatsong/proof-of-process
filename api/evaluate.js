@@ -43,7 +43,50 @@ function jsonResponse(status, body, extraHeaders) {
     });
 }
 
-export default async function handler(req) {
+/**
+ * Node.js 런타임에서는 Vercel이 Web 표준 Request가 아닌 고전적 Node
+ * IncomingMessage를 넘긴다 (headers는 소문자 키의 일반 객체, .get() 없음).
+ * 아래 로직은 Web Request 인터페이스(headers.get, json())를 전제로 작성돼
+ * 있으므로, 얇은 어댑터로 감싸 기존 로직을 그대로 재사용한다.
+ */
+function toWebRequest(nodeReq) {
+    return {
+        method: nodeReq.method,
+        headers: {
+            get: (name) => {
+                const v = nodeReq.headers?.[String(name).toLowerCase()]
+                return Array.isArray(v) ? v.join(', ') : (v ?? null)
+            }
+        },
+        json: async () => {
+            // Content-Type: application/json이면 Vercel이 req.body에 미리 파싱해 둔다.
+            if (nodeReq.body !== undefined && nodeReq.body !== null) {
+                return typeof nodeReq.body === 'string' ? JSON.parse(nodeReq.body) : nodeReq.body
+            }
+            return new Promise((resolve, reject) => {
+                let data = ''
+                nodeReq.on('data', chunk => { data += chunk })
+                nodeReq.on('end', () => {
+                    try { resolve(data ? JSON.parse(data) : {}) } catch (e) { reject(e) }
+                })
+                nodeReq.on('error', reject)
+            })
+        }
+    }
+}
+
+async function sendWebResponse(nodeRes, webResponse) {
+    nodeRes.statusCode = webResponse.status
+    webResponse.headers.forEach((value, key) => nodeRes.setHeader(key, value))
+    nodeRes.end(await webResponse.text())
+}
+
+export default async function handler(nodeReq, nodeRes) {
+    const response = await handleEvaluate(toWebRequest(nodeReq));
+    return sendWebResponse(nodeRes, response);
+}
+
+async function handleEvaluate(req) {
     if (req.method !== 'POST') {
         return jsonResponse(405, { error: 'Method not allowed' });
     }
