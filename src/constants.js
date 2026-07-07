@@ -43,9 +43,10 @@ export function calculateGrade(score) {
 // AI 제공업체별 모델 목록
 export const PROVIDER_MODELS = {
     gemini: {
-        defaults: ['gemini-2.5-flash', 'gemini-2.5-pro'],
+        defaults: ['gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.5-pro'],
         labels: {
-            'gemini-2.5-flash': 'Gemini 2.5 Flash (추천)',
+            'gemini-3.5-flash': 'Gemini 3.5 Flash (추천)',
+            'gemini-2.5-flash': 'Gemini 2.5 Flash',
             'gemini-2.5-pro': 'Gemini 2.5 Pro'
         },
         borderColor: '#e1f5fe',

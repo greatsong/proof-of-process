@@ -8,6 +8,7 @@ export const MAX_PROMPT_LEN = 200_000
 
 export const MODEL_ALLOWLIST = {
     gemini: [
+        'gemini-3.5-flash',
         'gemini-2.5-pro',
         'gemini-2.5-flash',
     ],

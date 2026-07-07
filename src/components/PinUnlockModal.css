@@ -1,0 +1,49 @@
+.pin-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: var(--spacing-4);
+}
+
+.pin-modal {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-6);
+    width: 100%;
+    max-width: 400px;
+}
+
+.pin-modal h3 {
+    margin-bottom: var(--spacing-3);
+}
+
+.pin-modal-desc {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-4);
+}
+
+.pin-modal-input {
+    width: 100%;
+    margin-bottom: var(--spacing-3);
+    font-size: var(--font-size-lg);
+    letter-spacing: 0.2em;
+    text-align: center;
+}
+
+.pin-modal-error {
+    color: var(--color-error-500, #ef4444);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-3);
+}
+
+.pin-modal-actions {
+    display: flex;
+    gap: var(--spacing-2);
+    justify-content: flex-end;
+}

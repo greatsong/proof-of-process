@@ -37,13 +37,15 @@ export async function evaluateChat({ chatContent, reflection, rubric, apiSetting
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         try {
-            let response = await singleEvaluation(prompt, provider, currentModel, apiKey, apiSettings)
+            const { text: response, ensembleInfo } = await singleEvaluation(prompt, provider, currentModel, apiKey, apiSettings)
 
             if (!response || response.trim() === '') {
                 throw new Error('AI returned empty response')
             }
 
-            return parseEvaluationResponse(response, rubric)
+            const parsed = parseEvaluationResponse(response, rubric)
+            if (ensembleInfo) parsed.ensembleInfo = ensembleInfo
+            return parsed
         } catch (error) {
             console.warn(`Evaluation attempt ${attempt + 1} failed:`, error.message)
             lastError = error
@@ -51,13 +53,15 @@ export async function evaluateChat({ chatContent, reflection, rubric, apiSetting
             if (attempt === MAX_RETRIES && !apiSettings.useServerSide) {
                 console.warn('All retries failed, trying server proxy backup...')
                 try {
-                    const response = await callServerProxy({
+                    const { text: response, ensembleInfo } = await callServerProxy({
                         prompt,
                         provider,
                         model: currentModel,
                         serverToken: apiSettings.serverToken
                     })
-                    return parseEvaluationResponse(response, rubric)
+                    const parsed = parseEvaluationResponse(response, rubric)
+                    if (ensembleInfo) parsed.ensembleInfo = ensembleInfo
+                    return parsed
                 } catch (serverError) {
                     throw new Error(`평가 실패 (재시도 ${MAX_RETRIES}회 포함): ${error.message} (Server fallback also failed: ${serverError.message})`)
                 }
@@ -76,7 +80,7 @@ async function evaluateWithKRuns(prompt, provider, currentModel, apiKey, apiSett
     for (let i = 0; i < runs; i++) {
         promises.push(
             singleEvaluation(prompt, provider, currentModel, apiKey, apiSettings)
-                .then(response => parseEvaluationResponse(response, rubric))
+                .then(({ text }) => parseEvaluationResponse(text, rubric))
                 .catch(err => {
                     console.warn(`Run ${i + 1} failed:`, err.message)
                     return null
@@ -96,6 +100,7 @@ async function evaluateWithKRuns(prompt, provider, currentModel, apiKey, apiSett
 
 /**
  * 단일 평가 호출
+ * @returns {Promise<{text: string, ensembleInfo?: object}>}
  */
 async function singleEvaluation(prompt, provider, currentModel, apiKey, apiSettings) {
     const hasRequiredKeys = !!apiKey
@@ -111,11 +116,13 @@ async function singleEvaluation(prompt, provider, currentModel, apiKey, apiSetti
     }
 
     const callAPI = getProvider(provider)
-    return await callAPI(prompt, apiKey, currentModel, apiSettings.serverToken)
+    const text = await callAPI(prompt, apiKey, currentModel, apiSettings.serverToken)
+    return { text }
 }
 
 /**
  * Server Proxy 호출 (/api/evaluate)
+ * @returns {Promise<{text: string, ensembleInfo?: object}>}
  */
 async function callServerProxy({ prompt, provider, model, serverToken }) {
     const headers = { 'Content-Type': 'application/json' }
@@ -133,5 +140,5 @@ async function callServerProxy({ prompt, provider, model, serverToken }) {
     }
 
     const data = await response.json()
-    return data.text || ''
+    return { text: data.text || '', ensembleInfo: data.ensembleInfo }
 }

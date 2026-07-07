@@ -117,6 +117,14 @@ function EvaluationResult({ result, rubric, onReset, apiSettings, selfEvalScores
                     </div>
                 </div>
 
+                {/* 앙상블 부분 참여 안내 */}
+                {result.ensembleInfo && result.ensembleInfo.succeeded < result.ensembleInfo.requested && (
+                    <div className="ensemble-partial-notice">
+                        ⚠️ 앙상블 평가: AI {result.ensembleInfo.requested}개 중 {result.ensembleInfo.succeeded}개만 참여했습니다
+                        ({result.ensembleInfo.providers.join(', ')}). 일부 모델이 응답하지 않아 평가 신뢰도가 낮아질 수 있습니다.
+                    </div>
+                )}
+
                 {/* 웹 전용 헤더 */}
                 <div className="result-header">
                     <h2>📊 평가 결과</h2>

@@ -130,12 +130,15 @@ export default async function handler(req) {
 
         // === Ensemble Mode ===
         if (provider === 'ensemble') {
+            const ENSEMBLE_PROVIDERS = ['gemini', 'openai', 'claude'];
             const results = await Promise.allSettled([
-                withTimeout(callProvider('gemini', prompt, clientApiKeys.gemini || SERVER_KEYS.gemini, 'gemini-2.5-flash'), TIMEOUT_MS),
+                withTimeout(callProvider('gemini', prompt, clientApiKeys.gemini || SERVER_KEYS.gemini, 'gemini-3.5-flash'), TIMEOUT_MS),
                 withTimeout(callProvider('openai', prompt, clientApiKeys.openai || SERVER_KEYS.openai, 'gpt-4o-mini'), TIMEOUT_MS),
                 withTimeout(callProvider('claude', prompt, clientApiKeys.claude || SERVER_KEYS.claude, 'claude-haiku-4-5-20251001'), TIMEOUT_MS)
             ]);
 
+            const succeededProviders = ENSEMBLE_PROVIDERS
+                .filter((_, i) => results[i].status === 'fulfilled' && results[i].value !== null);
             const successfulResults = results
                 .filter(r => r.status === 'fulfilled' && r.value !== null)
                 .map(r => r.value);
@@ -146,7 +149,14 @@ export default async function handler(req) {
 
             const synthesizedText = synthesizeResults(successfulResults);
 
-            return jsonResponse(200, { text: synthesizedText });
+            return jsonResponse(200, {
+                text: synthesizedText,
+                ensembleInfo: {
+                    requested: ENSEMBLE_PROVIDERS.length,
+                    succeeded: succeededProviders.length,
+                    providers: succeededProviders
+                }
+            });
         }
 
         // === Single Provider Mode ===
@@ -180,7 +190,7 @@ async function callProvider(provider, prompt, apiKey, model) {
     let url, options;
 
     if (provider === 'gemini') {
-        const targetModel = model || 'gemini-2.5-flash';
+        const targetModel = model || 'gemini-3.5-flash';
         url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey}`;
         options = {
             method: 'POST',

@@ -6,6 +6,7 @@ import EvaluationResult from '../components/EvaluationResult'
 import RubricSelector from '../components/RubricSelector'
 import StudentGuide from '../components/StudentGuide'
 import PrivacyPolicy from '../components/PrivacyPolicy'
+import PinUnlockModal from '../components/PinUnlockModal'
 import { evaluateChat } from '../services/evaluator'
 import { verifyEvidence } from '../services/evidenceVerifier'
 import { getEvaluationHistory, saveEvaluationToHistory, clearEvaluationHistory } from '../services/evaluationHistory'
@@ -22,7 +23,7 @@ function Home() {
         setIsLoading,
         rubrics
     } = useEvaluation()
-    const { apiSettings } = useAPI()
+    const { apiSettings, unlockApiWithPin } = useAPI()
 
     const [chatContent, setChatContent] = useState('')
     const [error, setError] = useState('')
@@ -34,6 +35,7 @@ function Home() {
     const [pendingContent, setPendingContent] = useState('')
     const [pendingReflection, setPendingReflection] = useState('')
     const [showPrivacy, setShowPrivacy] = useState(false)
+    const [showPinUnlock, setShowPinUnlock] = useState(false)
 
     // Cycle loading messages
     useEffect(() => {
@@ -91,8 +93,9 @@ function Home() {
         await runEvaluation(pendingContent, pendingReflection)
     }
 
-    const runEvaluation = async (content, reflection) => {
+    const runEvaluation = async (content, reflection, settingsOverride) => {
         setIsLoading(true)
+        const settings = settingsOverride || apiSettings
 
         try {
             const rawResult = await evaluateChat({
@@ -100,8 +103,8 @@ function Home() {
                 reflection,
                 rubric: currentRubric,
                 apiSettings: {
-                    ...apiSettings,
-                    useServerSide: !apiSettings.apiKey
+                    ...settings,
+                    useServerSide: !settings.apiKey
                 }
             })
 
@@ -115,10 +118,27 @@ function Home() {
             setEvalHistory(prev => [entry, ...prev])
         } catch (err) {
             console.error('Evaluation error:', err)
-            setError(err.message || '평가 중 오류가 발생했습니다.')
+            // 인증 문제(토큰 없음/만료)면 PIN 입력 모달로 안내
+            if (/인증 토큰|잠금 해제|401/.test(err.message || '')) {
+                setError('평가를 시작하려면 PIN 잠금 해제가 필요합니다.')
+                setShowPinUnlock(true)
+            } else {
+                setError(err.message || '평가 중 오류가 발생했습니다.')
+            }
         } finally {
             setIsLoading(false)
         }
+    }
+
+    // PIN 잠금 해제 성공 시 최신 토큰으로 곧바로 재평가
+    const handlePinUnlock = async (pin) => {
+        const newSettings = await unlockApiWithPin(pin)
+        if (!newSettings) return false
+
+        setShowPinUnlock(false)
+        setError('')
+        await runEvaluation(pendingContent, pendingReflection, newSettings)
+        return true
     }
 
     const handleReset = () => {
@@ -150,7 +170,7 @@ function Home() {
                         <span className="gradient-text">AI 채팅 기록</span>을 평가하세요
                     </h1>
                     <p className="hero-subtitle">
-                        ChatGPT, Claude, Gemini 등 AI 채팅 기록을 루브릭 기반으로 분석하여
+                        ChatGPT, Claude, Gemini 등 AI 채팅 기록을 루브릭 기반으로 분석하여{' '}
                         <br />정량/정성적 피드백을 제공합니다.
                     </p>
                 </section>
@@ -263,6 +283,13 @@ function Home() {
                 </section>
 
                 {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+
+                {showPinUnlock && (
+                    <PinUnlockModal
+                        onUnlock={handlePinUnlock}
+                        onClose={() => setShowPinUnlock(false)}
+                    />
+                )}
             </div>
         </div>
     )

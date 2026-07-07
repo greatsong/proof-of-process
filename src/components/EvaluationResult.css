@@ -1381,3 +1381,13 @@ body.is-pdf-rendering .grade-message-content p {
     border-radius: var(--radius-lg);
     font-size: var(--font-size-sm);
 }
+/* 앙상블 부분 참여 안내 */
+.ensemble-partial-notice {
+    padding: var(--spacing-3) var(--spacing-4);
+    margin-bottom: var(--spacing-4);
+    background: var(--color-warning-50);
+    border: 1px solid var(--color-warning-500);
+    border-radius: var(--radius-lg);
+    color: var(--color-warning-600);
+    font-size: var(--font-size-sm);
+}

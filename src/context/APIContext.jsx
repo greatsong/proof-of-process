@@ -24,7 +24,7 @@ export function APIProvider({ children }) {
                 provider: 'gemini',
                 apiKeys: { gemini: '', openai: '', claude: '' },
                 models: {
-                    gemini: 'gemini-2.5-flash',
+                    gemini: 'gemini-3.5-flash',
                     openai: 'gpt-4o',
                     claude: 'claude-sonnet-4-6'
                 }
@@ -33,7 +33,7 @@ export function APIProvider({ children }) {
             // Migration: Ensure models object exists
             if (!initialSettings.models) {
                 initialSettings.models = {
-                    gemini: initialSettings.ensembleModels?.gemini || 'gemini-2.5-flash',
+                    gemini: initialSettings.ensembleModels?.gemini || 'gemini-3.5-flash',
                     openai: initialSettings.ensembleModels?.openai || 'gpt-4o',
                     claude: initialSettings.ensembleModels?.claude || 'claude-sonnet-4-6'
                 }
@@ -43,9 +43,9 @@ export function APIProvider({ children }) {
                 }
             }
 
-            // Migration: Google이 퇴역시킨 Gemini 모델(1.x/2.0)이 저장돼 있으면 2.5-flash로 교체
+            // Migration: Google이 퇴역시킨 Gemini 모델(1.x/2.0)이 저장돼 있으면 3.5-flash로 교체
             if (/^gemini-(1\.|2\.0)/.test(initialSettings.models.gemini || '')) {
-                initialSettings.models.gemini = 'gemini-2.5-flash'
+                initialSettings.models.gemini = 'gemini-3.5-flash'
                 if (savedApiSettings) saveToStorage('apiSettings', initialSettings)
             }
 
@@ -130,7 +130,8 @@ export function APIProvider({ children }) {
                 }
                 setApiSettingsState(newSettings)
                 saveToStorage('apiSettings', newSettings)
-                return true
+                // truthy — 기존 boolean 사용처와 호환되면서, 즉시 재시도 시 최신 토큰을 쓸 수 있도록 설정 반환
+                return newSettings
             }
             return false
         } catch {
