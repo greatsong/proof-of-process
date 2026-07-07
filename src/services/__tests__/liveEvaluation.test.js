@@ -1,16 +1,14 @@
 /**
- * 실제 API 호출을 통한 EduFlow 루브릭 평가 테스트
- * 실행: npx vitest run src/services/__tests__/liveEvaluation.test.js
+ * 실제 API 호출을 통한 EduFlow 루브릭 평가 테스트 (opt-in)
+ * 기본 test:run에서는 건너뛰며, API 키를 명시해야 실행됩니다.
+ * 실행: LIVE_TEST_ANTHROPIC_API_KEY=sk-... npx vitest run src/services/__tests__/liveEvaluation.test.js
  */
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'fs'
 import { buildEvaluationPrompt } from '../prompts'
 import { parseEvaluationResponse } from '../responseParser'
 import { RUBRIC_TEMPLATES } from '../../data/rubricTemplates'
 
-// API 키를 eduflow/.env에서 읽기
-const envContent = readFileSync('/Users/greatsong/greatsong-project/eduflow/.env', 'utf-8')
-const CLAUDE_API_KEY = envContent.match(/ANTHROPIC_API_KEY=(.+)/)?.[1]?.trim() || ''
+const CLAUDE_API_KEY = process.env.LIVE_TEST_ANTHROPIC_API_KEY || ''
 
 // ─── 고등학생 VPython 수업 샘플 채팅 (9턴) ───
 const vpythonChat = `You: 선생님이 VPython으로 태양계를 만들라고 했는데 어떻게 시작해야 해?
@@ -64,7 +62,7 @@ ChatGPT: 제목을 "김철수의 계산기"로 변경했습니다.`
 
 const reflection = '처음에는 어려웠지만 수학 시간에 배운 삼각함수가 여기서 쓰이는걸 알게 되어 신기했습니다.'
 
-describe('실제 API 평가 테스트', () => {
+describe.skipIf(!CLAUDE_API_KEY)('실제 API 평가 테스트', () => {
     // VPython 루브릭 (고품질 채팅)
     it('VPython 루브릭 + 고품질 채팅 → 평가 보고서 생성', async () => {
         const rubric = RUBRIC_TEMPLATES.find(t => t.id === 'template_vpython')
