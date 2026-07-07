@@ -12,7 +12,13 @@ import { verifyEvidence } from '../services/evidenceVerifier'
 import { getEvaluationHistory, saveEvaluationToHistory, clearEvaluationHistory } from '../services/evaluationHistory'
 import GrowthChart from '../components/evaluation/GrowthChart'
 import SelfEvaluation from '../components/SelfEvaluation'
+import { fetchSharedChat } from '../services/importChat'
 import './Home.css'
+
+// 공유 대화 캐시 키 (sessionStorage — 탭을 닫으면 사라짐, 새로고침엔 유지)
+const IMPORT_CACHE_KEY = 'ai-chat-eval-imported-chat'
+// StrictMode 이중 마운트/새로고침에도 일회용 토큰을 두 번 소비하지 않도록 하는 모듈 가드
+let importAttempted = false
 
 function Home() {
     const {
@@ -25,7 +31,7 @@ function Home() {
     } = useEvaluation()
     const { apiSettings, unlockApiWithPin } = useAPI()
 
-    const [chatContent, setChatContent] = useState('')
+    const [, setChatContent] = useState('')
     const [error, setError] = useState('')
     const [step, setStep] = useState(1) // 1: 입력, 2: 결과
     const [loadingMessage, setLoadingMessage] = useState('')
@@ -36,6 +42,53 @@ function Home() {
     const [pendingReflection, setPendingReflection] = useState('')
     const [showPrivacy, setShowPrivacy] = useState(false)
     const [showPinUnlock, setShowPinUnlock] = useState(false)
+    const [importedChat, setImportedChat] = useState('')
+    const [importNotice, setImportNotice] = useState(null) // { type: 'success'|'error', message }
+
+    // 공유 링크(#import=<토큰>)로 진입한 경우 채팅 앱에서 대화를 불러와 입력창을 채운다.
+    useEffect(() => {
+        // 이미 시도했으면(StrictMode 이중 마운트 등) 캐시만 복원하고 종료
+        if (importAttempted) {
+            const cached = sessionStorage.getItem(IMPORT_CACHE_KEY)
+            if (cached) setImportedChat(cached)
+            return
+        }
+        importAttempted = true
+
+        const match = window.location.hash.match(/^#import=([a-f0-9]{64})$/i)
+        if (!match) {
+            // 토큰 없음 — 새로고침 시 이전에 불러온 대화가 있으면 복원
+            const cached = sessionStorage.getItem(IMPORT_CACHE_KEY)
+            if (cached) setImportedChat(cached)
+            return
+        }
+
+        const token = match[1]
+        // 토큰을 즉시 주소창에서 제거 — fetch 를 기다리기 전에 제거해야, 요청 도중 새로고침해도
+        // 일회용 토큰을 다시 소비하려다 404 가 나는 것을 막는다. (새로고침 시엔 sessionStorage 캐시로 복원)
+        window.history.replaceState(null, '', window.location.pathname + window.location.search)
+        ;(async () => {
+            try {
+                const { text, conversation } = await fetchSharedChat(token)
+                if (text && text.trim()) {
+                    setImportedChat(text)
+                    sessionStorage.setItem(IMPORT_CACHE_KEY, text)
+                    const who = conversation.studentName ? `${conversation.studentName} 님의 ` : ''
+                    setImportNotice({
+                        type: 'success',
+                        message: `${who}채팅 대화를 불러왔습니다. 루브릭을 선택하고 평가를 진행하세요.`,
+                    })
+                } else {
+                    setImportNotice({ type: 'error', message: '불러온 대화에 평가할 내용이 없습니다.' })
+                }
+            } catch (err) {
+                setImportNotice({
+                    type: 'error',
+                    message: err.message || '공유된 대화를 불러오지 못했습니다.',
+                })
+            }
+        })()
+    }, [])
 
     // Cycle loading messages
     useEffect(() => {
@@ -231,10 +284,30 @@ function Home() {
                 {/* Main Content */}
                 {step === 1 && !showSelfEval && (
                     <div className="input-section animate-fadeIn">
+                        {importNotice && (
+                            <div
+                                role="status"
+                                style={{
+                                    marginBottom: '1rem',
+                                    padding: '0.75rem 1rem',
+                                    borderRadius: '0.5rem',
+                                    fontSize: '0.875rem',
+                                    border: '1px solid',
+                                    borderColor: importNotice.type === 'success' ? '#a7f3d0' : '#fecaca',
+                                    background: importNotice.type === 'success' ? '#ecfdf5' : '#fef2f2',
+                                    color: importNotice.type === 'success' ? '#065f46' : '#991b1b',
+                                }}
+                            >
+                                {importNotice.type === 'success' ? '✅ ' : '⚠️ '}
+                                {importNotice.message}
+                            </div>
+                        )}
                         <ChatInput
+                            key={importedChat ? 'imported' : 'blank'}
                             onSubmit={handleChatSubmit}
                             isLoading={isLoading}
                             disabled={!isReady}
+                            initialContent={importedChat}
                         />
 
                         {!isReady && (

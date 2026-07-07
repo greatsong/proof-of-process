@@ -2,9 +2,11 @@ import { useState, useMemo } from 'react'
 import { parseChatContent, analyzeTurns } from '../services/chatParser'
 import './ChatInput.css'
 
-function ChatInput({ onSubmit, isLoading, disabled }) {
+function ChatInput({ onSubmit, isLoading, disabled, initialContent }) {
     const [inputMethod, setInputMethod] = useState('paste') // 'paste', 'file'
-    const [chatContent, setChatContent] = useState('')
+    // 외부(공유 링크 등)에서 전달된 내용을 초기값으로 사용.
+    // Home 이 key 로 리마운트해 주므로, 새 내용이 오면 이 초기화가 다시 실행된다.
+    const [chatContent, setChatContent] = useState(() => initialContent || '')
     const [reflection, setReflection] = useState('')
 
     // 실시간 파싱 미리보기 (입력이 충분할 때만)
@@ -56,7 +58,7 @@ function ChatInput({ onSubmit, isLoading, disabled }) {
                         } else {
                             resolve(JSON.stringify(json, null, 2))
                         }
-                    } catch (parseErr) {
+                    } catch {
                         resolve(content)
                     }
                 } else {
