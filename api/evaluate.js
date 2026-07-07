@@ -223,7 +223,9 @@ async function callProvider(provider, prompt, apiKey, model) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: INTERACTION_MODE_SYSTEM_PROMPT + "\n\n" + prompt }] }],
-                generationConfig: { temperature: 0.3, maxOutputTokens: 4096 }
+                // Gemini 3.x 계열은 추론(thinking) 토큰도 maxOutputTokens에서 차감되므로
+                // Claude/OpenAI보다 여유 있게 잡아야 최종 JSON이 잘리지 않는다 (실측 확인).
+                generationConfig: { temperature: 0.3, maxOutputTokens: 8192 }
             })
         };
     } else if (provider === 'openai') {
