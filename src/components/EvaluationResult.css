@@ -29,6 +29,16 @@
     background: var(--bg-secondary);
 }
 
+/* 보고서 하단 저장 영역 — 보고서를 다 읽은 뒤 저장하도록 아래에 배치 */
+.report-save-section {
+    margin-top: var(--spacing-6);
+}
+
+.report-save-section .save-actions {
+    margin-top: var(--spacing-4);
+    justify-content: flex-end;
+}
+
 .student-info-input h3 {
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-semibold);

@@ -4,54 +4,11 @@
  * 각 템플릿은 특정 교과/활동에 맞춘 AI 채팅 평가 기준을 제공합니다.
  */
 
-// ─── EduFlow 공통 평가 기준 (모든 EduFlow 루브릭에서 동일) ───
-const COMMON_CRITERIA = [
-    {
-        id: 'self_direction',
-        name: '자기주도성',
-        description: '스스로 목표를 설정하고 AI와의 대화를 주도적으로 이끌었는가',
-        weight: 25,
-        levels: [
-            { score: 5, description: '학습 목표를 설정하고, 맥락을 체계적으로 전달하며 대화를 주도함' },
-            { score: 4, description: '자기 상황과 원하는 것을 설명하며 능동적으로 소통함' },
-            { score: 3, description: '기본적인 질문은 하지만 AI 주도로 대화가 진행됨' },
-            { score: 2, description: 'AI에게 결과물만 요청하고 수동적으로 따라감' },
-            { score: 1, description: '"해줘" 수준의 요청만 하거나 복사-붙여넣기에 그침' }
-        ]
-    },
-    {
-        id: 'critical_verification',
-        name: '비판적 검증',
-        description: 'AI 응답을 그대로 받아들이지 않고 따져보고 확인했는가',
-        weight: 25,
-        levels: [
-            { score: 5, description: 'AI 응답의 정확성과 한계를 따져보고, 의심스러운 부분을 질문하여 수정함' },
-            { score: 4, description: 'AI 응답을 확인하려는 시도가 있고 일부 오류를 발견함' },
-            { score: 3, description: '간헐적으로 의문을 제기하지만 대체로 수용함' },
-            { score: 2, description: 'AI 응답을 거의 그대로 받아들임' },
-            { score: 1, description: '전혀 검증하지 않고 복사하여 사용함' }
-        ]
-    },
-    {
-        id: 'iterative_improvement',
-        name: '반복적 개선',
-        description: 'AI 응답을 바탕으로 질문을 발전시키고 결과를 개선했는가',
-        weight: 25,
-        levels: [
-            { score: 5, description: 'AI 응답을 분석하고 구체적 수정사항을 전달하며 여러 차례 개선함' },
-            { score: 4, description: '응답을 참고하여 후속 질문을 발전시킴' },
-            { score: 3, description: '일부 수정 요청이 있으나 구체성이 부족함' },
-            { score: 2, description: '한두 번 주고받고 더 이상 개선하지 않음' },
-            { score: 1, description: '첫 응답을 그대로 사용하고 대화가 발전하지 않음' }
-        ]
-    }
-]
-
-// ─── EduFlow 공통 윤리 체크 (P/F) ───
+// ─── 공통 윤리 체크 (P/F) — 모든 루브릭에서 사용 ───
 const COMMON_ETHICS_CHECK = {
     type: 'pass_fail',
     defaultResult: 'pass',
-    description: 'AI 활용의 윤리적 측면 확인 (특별한 이슈가 없으면 Pass)',
+    description: 'AI 활용의 윤리적 측면 확인 (특별한 이슈가 없으면 Pass). 감점이 아니라 교사와 함께 짚어볼 지점을 표시하는 용도입니다.',
     failCriteria: [
         'AI 생성물을 자기 것처럼 그대로 제출',
         '유해하거나 부적절한 콘텐츠 생성 시도',
@@ -65,6 +22,7 @@ export const RUBRIC_TEMPLATES = [
         name: '일반 AI 활용 역량 평가',
         description: '범교과적으로 사용할 수 있는 기본 AI 채팅 활용 평가 루브릭',
         icon: '🤖',
+        ethicsCheck: COMMON_ETHICS_CHECK,
         criteria: [
             {
                 id: 'clarity',
@@ -102,7 +60,7 @@ export const RUBRIC_TEMPLATES = [
                     { score: 4, description: '응답의 정확성을 확인하려는 시도가 있음' },
                     { score: 3, description: '일부 의문을 제기함' },
                     { score: 2, description: '대부분 무비판적으로 수용' },
-                    { score: 1, description: '전혀 검증하지 않음' }
+                    { score: 1, description: 'AI 답을 확인·검증하는 시도가 아직 나타나지 않음' }
                 ]
             },
             {
@@ -125,6 +83,7 @@ export const RUBRIC_TEMPLATES = [
         name: '글쓰기/국어 AI 활용 평가',
         description: '국어, 영어, 사회 등 글쓰기 과제에서의 AI 활용 능력 평가',
         icon: '✍️',
+        ethicsCheck: COMMON_ETHICS_CHECK,
         criteria: [
             {
                 id: 'topic_development',
@@ -148,7 +107,7 @@ export const RUBRIC_TEMPLATES = [
                     { score: 5, description: 'AI를 참고 자료로 활용하면서 자신의 관점과 문체를 명확히 유지함' },
                     { score: 4, description: '자신의 관점이 드러나며, AI 내용을 재구성하여 사용함' },
                     { score: 3, description: '일부 자기 의견이 있으나 AI 의존도가 높음' },
-                    { score: 2, description: 'AI 생성 텍스트를 거의 그대로 사용함' },
+                    { score: 2, description: 'AI가 쓴 문장을 거의 수정 없이 사용함(자기 관점·표현으로 바꾼 흔적은 아직 적음)' },
                     { score: 1, description: '완전히 AI에 의존하여 자기 목소리가 없음' }
                 ]
             },
@@ -175,7 +134,7 @@ export const RUBRIC_TEMPLATES = [
                     { score: 4, description: '주요 정보를 검증하려는 시도가 있음' },
                     { score: 3, description: '일부 확인하였으나 체계적이지 않음' },
                     { score: 2, description: 'AI 정보가 맞는지 의심하지 않고 그대로 사용함' },
-                    { score: 1, description: 'AI가 틀릴 수 있다는 인식 자체가 없음' }
+                    { score: 1, description: 'AI 정보의 정확성을 확인하는 과정 없이 그대로 인용함' }
                 ]
             }
         ]
@@ -185,6 +144,7 @@ export const RUBRIC_TEMPLATES = [
         name: '과학 탐구 AI 활용 평가',
         description: '과학 실험 설계, 데이터 분석, 탐구 보고서 작성 시 AI 활용 평가',
         icon: '🔬',
+        ethicsCheck: COMMON_ETHICS_CHECK,
         criteria: [
             {
                 id: 'hypothesis',
@@ -222,7 +182,7 @@ export const RUBRIC_TEMPLATES = [
                     { score: 4, description: 'AI 설명을 과학적으로 검토하려는 시도가 있음' },
                     { score: 3, description: '일부 과학적 질문을 하였으나 체계적이지 않음' },
                     { score: 2, description: '과학적 검증 없이 AI 설명을 수용함' },
-                    { score: 1, description: '과학적 추론이 전혀 없음' }
+                    { score: 1, description: 'AI 설명의 근거를 따져보는 질문이 아직 나타나지 않음' }
                 ]
             },
             {
@@ -240,128 +200,12 @@ export const RUBRIC_TEMPLATES = [
             }
         ]
     },
-    // ─── EduFlow 카테고리별 루브릭 (공통 3기준 + 내용 이해 + 윤리 P/F) ───
-    {
-        id: 'template_vpython',
-        name: 'VPython / 컴퓨팅 사고력 평가',
-        description: 'VPython 3D 프로그래밍 학습에서의 AI 채팅 활용 능력 평가',
-        icon: '🎮',
-        ethicsCheck: COMMON_ETHICS_CHECK,
-        criteria: [
-            ...COMMON_CRITERIA,
-            {
-                id: 'domain_understanding',
-                name: '내용 이해',
-                description: 'VPython 3D 프로그래밍의 핵심 개념을 AI와 대화하며 이해했는가',
-                weight: 25,
-                levels: [
-                    { score: 5, description: '좌표, 객체, 애니메이션 원리를 이해하고 AI에게 자기 말로 확인함' },
-                    { score: 4, description: '주요 개념을 AI에게 질문하고 이해하려 노력함' },
-                    { score: 3, description: '코드를 따라하지만 개념 이해가 표면적임' },
-                    { score: 2, description: '이해 없이 AI 코드를 그대로 사용함' },
-                    { score: 1, description: '개념 이해에 관심이 없음' }
-                ]
-            }
-        ]
-    },
-    {
-        id: 'template_problem_solving',
-        name: '문제해결 / 디자인씽킹 평가',
-        description: '문제 발견부터 솔루션 설계까지 문제해결 과정에서의 AI 활용 평가',
-        icon: '🧩',
-        ethicsCheck: COMMON_ETHICS_CHECK,
-        criteria: [
-            ...COMMON_CRITERIA,
-            {
-                id: 'domain_understanding',
-                name: '내용 이해',
-                description: '문제해결 과정의 핵심 단계를 이해하고 AI와 탐색했는가',
-                weight: 25,
-                levels: [
-                    { score: 5, description: '관찰-가설-검증-해결 과정을 이해하고 AI와 각 단계를 깊이 탐색함' },
-                    { score: 4, description: '문제를 여러 관점에서 보려 하고 AI와 해결 과정을 논의함' },
-                    { score: 3, description: '문제 인식은 있으나 해결 과정의 탐색이 표면적임' },
-                    { score: 2, description: '문제 분석 없이 AI에게 해결책만 요청함' },
-                    { score: 1, description: '문제해결 과정에 관심이 없음' }
-                ]
-            }
-        ]
-    },
-    {
-        id: 'template_machine_learning',
-        name: '머신러닝 / 데이터과학 평가',
-        description: '머신러닝 입문 프로젝트에서의 AI 채팅 활용 능력 평가',
-        icon: '📊',
-        ethicsCheck: COMMON_ETHICS_CHECK,
-        criteria: [
-            ...COMMON_CRITERIA,
-            {
-                id: 'domain_understanding',
-                name: '내용 이해',
-                description: '데이터와 모델의 기본 개념을 AI와 대화하며 이해했는가',
-                weight: 25,
-                levels: [
-                    { score: 5, description: '데이터 특성, 모델 원리, 결과 의미를 AI에게 질문하고 자기 말로 설명함' },
-                    { score: 4, description: '주요 개념을 AI에게 물어보고 이해하려 노력함' },
-                    { score: 3, description: '따라하지만 왜 이렇게 하는지 이해가 부족함' },
-                    { score: 2, description: '이해 없이 AI가 준 코드를 그대로 실행함' },
-                    { score: 1, description: '개념 이해에 관심이 없음' }
-                ]
-            }
-        ]
-    },
-    {
-        id: 'template_physical_computing',
-        name: '피지컬 컴퓨팅 AI 활용 평가',
-        description: 'Pico 등 하드웨어 프로젝트에서의 AI 채팅 활용 능력 평가',
-        icon: '🔌',
-        ethicsCheck: COMMON_ETHICS_CHECK,
-        criteria: [
-            ...COMMON_CRITERIA,
-            {
-                id: 'domain_understanding',
-                name: '내용 이해',
-                description: '하드웨어 연결과 소프트웨어 동작의 관계를 AI와 대화하며 이해했는가',
-                weight: 25,
-                levels: [
-                    { score: 5, description: '핀 연결 이유, 센서 값의 의미, 코드 동작을 AI와 논의하며 이해함' },
-                    { score: 4, description: '왜 이렇게 연결하는지, 코드가 뭘 하는지 AI에게 물어봄' },
-                    { score: 3, description: '따라하지만 원리 이해가 부족함' },
-                    { score: 2, description: '이해 없이 AI 지시대로만 따라함' },
-                    { score: 1, description: '하드웨어-소프트웨어 관계 이해에 관심이 없음' }
-                ]
-            }
-        ]
-    },
-    {
-        id: 'template_vibe_coding',
-        name: 'AI 협업 코딩 (바이브 코딩) 평가',
-        description: 'AI와 대화하며 프로그램을 함께 만드는 과정에서의 활용 능력 평가',
-        icon: '🎵',
-        ethicsCheck: COMMON_ETHICS_CHECK,
-        criteria: [
-            ...COMMON_CRITERIA,
-            {
-                id: 'domain_understanding',
-                name: '내용 이해',
-                description: 'AI가 만든 코드를 이해하고 자기 아이디어를 프로그램에 반영했는가',
-                weight: 25,
-                levels: [
-                    { score: 5, description: '코드 구조를 이해하고 자기 아이디어를 구체적으로 프로그램에 반영함' },
-                    { score: 4, description: '코드의 주요 부분을 이해하고 자기 의견을 수정사항으로 전달함' },
-                    { score: 3, description: '코드를 대략 이해하지만 자기 아이디어 반영은 부족함' },
-                    { score: 2, description: '코드를 읽지 않고 AI가 주는 대로 사용함' },
-                    { score: 1, description: '코드 이해나 아이디어 반영 시도가 없음' }
-                ]
-            }
-        ]
-    },
-    // ─── 기본 루브릭 ───
     {
         id: 'template_coding',
         name: '코딩/프로그래밍 AI 활용 평가',
         description: '프로그래밍 과제에서 AI를 학습 도구로 활용하는 능력 평가',
         icon: '💻',
+        ethicsCheck: COMMON_ETHICS_CHECK,
         criteria: [
             {
                 id: 'problem_decomposition',
@@ -385,7 +229,7 @@ export const RUBRIC_TEMPLATES = [
                     { score: 5, description: 'AI 코드의 각 부분에 대해 질문하고, 이해한 내용을 자기 말로 설명하며, 변형을 시도함' },
                     { score: 4, description: '코드 설명을 요청하고 이해하려는 노력이 보임' },
                     { score: 3, description: '일부 질문이 있으나 깊은 이해 시도는 부족함' },
-                    { score: 2, description: '코드를 그대로 복사하여 사용함' },
+                    { score: 2, description: '코드의 동작을 묻는 질문 없이 받은 코드를 그대로 실행함' },
                     { score: 1, description: '코드 이해 없이 결과물만 가져감' }
                 ]
             },
@@ -398,8 +242,8 @@ export const RUBRIC_TEMPLATES = [
                     { score: 5, description: '에러 메시지와 시도한 내용을 구체적으로 공유하며, AI 제안을 검증 후 적용함' },
                     { score: 4, description: '에러 상황을 설명하고 AI 도움을 받아 해결함' },
                     { score: 3, description: '단순히 에러를 붙여넣고 해결을 요청함' },
-                    { score: 2, description: '"안 돼요"만 전달하여 AI가 도움을 주기 어려움' },
-                    { score: 1, description: '에러 발생 시 해결 시도 없이 포기함' }
+                    { score: 2, description: '"안 돼요"처럼 상황 정보가 적은 요청이라, 무엇을 시도했는지 덧붙이면 도움받기 쉬움' },
+                    { score: 1, description: '에러가 난 뒤 원인을 묻거나 다시 시도하는 대화가 이어지지 않음' }
                 ]
             },
             {
@@ -412,7 +256,7 @@ export const RUBRIC_TEMPLATES = [
                     { score: 4, description: '코드 개선을 위한 질문과 시도가 있음' },
                     { score: 3, description: '일부 개선 요청이 있으나 제한적임' },
                     { score: 2, description: '최초 작동 코드에 만족하고 개선하지 않음' },
-                    { score: 1, description: '코드 품질에 대한 인식이 없음' }
+                    { score: 1, description: '작동하는 코드를 얻은 뒤 개선·최적화를 묻는 대화가 나타나지 않음' }
                 ]
             }
         ]

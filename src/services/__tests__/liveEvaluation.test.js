@@ -1,5 +1,5 @@
 /**
- * 실제 API 호출을 통한 EduFlow 루브릭 평가 테스트 (opt-in)
+ * 실제 API 호출을 통한 루브릭 평가 테스트 (opt-in)
  * 기본 test:run에서는 건너뛰며, API 키를 명시해야 실행됩니다.
  * 실행: LIVE_TEST_ANTHROPIC_API_KEY=sk-... npx vitest run src/services/__tests__/liveEvaluation.test.js
  */
@@ -65,7 +65,7 @@ const reflection = '처음에는 어려웠지만 수학 시간에 배운 삼각�
 describe.skipIf(!CLAUDE_API_KEY)('실제 API 평가 테스트', () => {
     // VPython 루브릭 (고품질 채팅)
     it('VPython 루브릭 + 고품질 채팅 → 평가 보고서 생성', async () => {
-        const rubric = RUBRIC_TEMPLATES.find(t => t.id === 'template_vpython')
+        const rubric = RUBRIC_TEMPLATES.find(t => t.id === 'template_general')
         expect(rubric).toBeDefined()
         expect(rubric.criteria).toHaveLength(4) // 공통3 + 내용이해1
         expect(rubric.ethicsCheck).toBeDefined()
@@ -156,7 +156,7 @@ describe.skipIf(!CLAUDE_API_KEY)('실제 API 평가 테스트', () => {
 
     // 바이브코딩 루브릭 (저품질 채팅)
     it('바이브코딩 루브릭 + 저품질 채팅 → 낮은 점수 보고서', async () => {
-        const rubric = RUBRIC_TEMPLATES.find(t => t.id === 'template_vibe_coding')
+        const rubric = RUBRIC_TEMPLATES.find(t => t.id === 'template_coding')
         expect(rubric).toBeDefined()
 
         const prompt = buildEvaluationPrompt(vibeCodingChatLow, rubric, '')

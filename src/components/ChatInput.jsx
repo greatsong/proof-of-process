@@ -164,7 +164,7 @@ function ChatInput({ onSubmit, isLoading, disabled, initialContent }) {
                 {/* Reflection Input (Always Visible) */}
                 <div className="input-section reflection-section">
                     <label htmlFor="reflection" className="input-label optional-label">
-                        <span>자기평가 / 추가 맥락 (선택사항)</span>
+                        <span>추가 맥락 (선택사항)</span>
                         <span className="badge-optional">정성평가 반영</span>
                     </label>
                     <textarea

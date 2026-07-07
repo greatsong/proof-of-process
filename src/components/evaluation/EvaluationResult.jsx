@@ -10,7 +10,7 @@ import RadarChart from './RadarChart'
 import CriteriaDetail from './CriteriaDetail'
 import '../EvaluationResult.css'
 
-function EvaluationResult({ result, rubric, onReset, apiSettings, selfEvalScores }) {
+function EvaluationResult({ result, onReset, apiSettings }) {
     const [studentId, setStudentId] = useState('')
     const [studentName, setStudentName] = useState('')
     const resultsRef = useRef(null)
@@ -27,7 +27,6 @@ function EvaluationResult({ result, rubric, onReset, apiSettings, selfEvalScores
     }
 
     const {
-        totalScore,
         grade,
         criteriaScores,
         qualitativeEvaluation,
@@ -84,6 +83,7 @@ function EvaluationResult({ result, rubric, onReset, apiSettings, selfEvalScores
     }
 
     return (
+        <>
         <div className="evaluation-result" ref={resultsRef}>
             {/* 1페이지: 요약 */}
             <div className="pdf-summary-page">
@@ -119,48 +119,13 @@ function EvaluationResult({ result, rubric, onReset, apiSettings, selfEvalScores
                     </div>
                 )}
 
-                {/* 웹 전용 헤더 */}
+                {/* 웹 전용 헤더 — 저장(다운로드)은 보고서 하단으로 이동 */}
                 <div className="result-header">
                     <h2>📊 평가 결과</h2>
                     <div className="result-actions">
-                        <button onClick={downloadReport} className="btn btn-secondary btn-sm">
-                            📥 다운로드
-                        </button>
                         <button onClick={onReset} className="btn btn-ghost btn-sm">
                             🔄 다시 평가
                         </button>
-                    </div>
-                </div>
-
-                {/* 학생 정보 입력 (웹 전용) */}
-                <div className="student-info-input card">
-                    <h3>👤 학생 정보 (선택)</h3>
-                    <p className="info-hint">
-                        다운로드할 파일에 포함됩니다. 서버에 저장되지 않습니다.
-                    </p>
-                    <div className="student-info-fields">
-                        <div className="form-group">
-                            <label htmlFor="studentId">학번</label>
-                            <input
-                                type="text"
-                                id="studentId"
-                                className="input"
-                                value={studentId}
-                                onChange={(e) => setStudentId(e.target.value)}
-                                placeholder="예: 20101"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="studentName">이름</label>
-                            <input
-                                type="text"
-                                id="studentName"
-                                className="input"
-                                value={studentName}
-                                onChange={(e) => setStudentName(e.target.value)}
-                                placeholder="예: 홍길동"
-                            />
-                        </div>
                     </div>
                 </div>
 
@@ -180,12 +145,49 @@ function EvaluationResult({ result, rubric, onReset, apiSettings, selfEvalScores
                     criteriaScores={criteriaScores}
                     qualitativeEvaluation={qualitativeEvaluation}
                     suggestions={suggestions}
-                    selfEvalScores={selfEvalScores}
                     verificationSummary={verificationSummary}
                     conversationFlow={conversationFlow}
                 />
             </div>
         </div>
+
+        {/* 보고서를 다 읽은 뒤 저장 — resultsRef(=PDF 캡처) 밖이라 PDF에는 포함되지 않음 */}
+        <div className="report-save-section student-info-input card">
+            <h3>💾 보고서 저장</h3>
+            <p className="info-hint">
+                보고서를 확인하셨다면 아래에서 PDF로 저장하세요. 학번·이름을 입력하면 파일명에 포함됩니다. (서버에 저장되지 않습니다)
+            </p>
+            <div className="student-info-fields">
+                <div className="form-group">
+                    <label htmlFor="studentId">학번</label>
+                    <input
+                        type="text"
+                        id="studentId"
+                        className="input"
+                        value={studentId}
+                        onChange={(e) => setStudentId(e.target.value)}
+                        placeholder="예: 20101"
+                    />
+                </div>
+                <div className="form-group">
+                    <label htmlFor="studentName">이름</label>
+                    <input
+                        type="text"
+                        id="studentName"
+                        className="input"
+                        value={studentName}
+                        onChange={(e) => setStudentName(e.target.value)}
+                        placeholder="예: 홍길동"
+                    />
+                </div>
+            </div>
+            <div className="result-actions save-actions">
+                <button onClick={downloadReport} className="btn btn-secondary">
+                    📥 PDF로 저장
+                </button>
+            </div>
+        </div>
+        </>
     )
 }
 

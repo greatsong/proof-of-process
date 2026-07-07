@@ -11,7 +11,6 @@ import { evaluateChat } from '../services/evaluator'
 import { verifyEvidence } from '../services/evidenceVerifier'
 import { getEvaluationHistory, saveEvaluationToHistory, clearEvaluationHistory } from '../services/evaluationHistory'
 import GrowthChart from '../components/evaluation/GrowthChart'
-import SelfEvaluation from '../components/SelfEvaluation'
 import { fetchSharedChat } from '../services/importChat'
 import './Home.css'
 
@@ -36,8 +35,6 @@ function Home() {
     const [step, setStep] = useState(1) // 1: 입력, 2: 결과
     const [loadingMessage, setLoadingMessage] = useState('')
     const [evalHistory, setEvalHistory] = useState(() => getEvaluationHistory())
-    const [selfEvalScores, setSelfEvalScores] = useState(null)
-    const [showSelfEval, setShowSelfEval] = useState(false)
     const [pendingContent, setPendingContent] = useState('')
     const [pendingReflection, setPendingReflection] = useState('')
     const [showPrivacy, setShowPrivacy] = useState(false)
@@ -132,22 +129,10 @@ function Home() {
             return
         }
 
-        // Show self-evaluation step
+        // 자기평가 단계 없이 곧바로 평가 실행 (PIN 재시도/재평가를 위해 마지막 입력 보관)
         setPendingContent(content)
         setPendingReflection(reflection)
-        setShowSelfEval(true)
-    }
-
-    const handleSelfEvalComplete = async (scores) => {
-        setSelfEvalScores(scores)
-        setShowSelfEval(false)
-        await runEvaluation(pendingContent, pendingReflection)
-    }
-
-    const handleSelfEvalSkip = async () => {
-        setSelfEvalScores(null)
-        setShowSelfEval(false)
-        await runEvaluation(pendingContent, pendingReflection)
+        await runEvaluation(content, reflection)
     }
 
     const runEvaluation = async (content, reflection, settingsOverride) => {
@@ -203,8 +188,6 @@ function Home() {
         setEvaluationResult(null)
         setError('')
         setStep(1)
-        setSelfEvalScores(null)
-        setShowSelfEval(false)
         setPendingContent('')
         setPendingReflection('')
     }
@@ -270,19 +253,8 @@ function Home() {
                 )}
 
 
-                {/* Self Evaluation Step */}
-                {showSelfEval && currentRubric && (
-                    <div className="self-eval-section animate-fadeIn">
-                        <SelfEvaluation
-                            rubric={currentRubric}
-                            onComplete={handleSelfEvalComplete}
-                            onSkip={handleSelfEvalSkip}
-                        />
-                    </div>
-                )}
-
                 {/* Main Content */}
-                {step === 1 && !showSelfEval && (
+                {step === 1 && (
                     <div className="input-section animate-fadeIn">
                         {importNotice && (
                             <div
@@ -331,7 +303,6 @@ function Home() {
                                 provider: apiSettings.provider === 'ensemble' ? 'ensemble' : apiSettings.provider,
                                 models: apiSettings.models
                             }}
-                            selfEvalScores={selfEvalScores}
                         />
                     </div>
                 )}
