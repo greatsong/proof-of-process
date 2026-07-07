@@ -180,7 +180,7 @@ async function callProvider(provider, prompt, apiKey, model) {
     let url, options;
 
     if (provider === 'gemini') {
-        const targetModel = model || 'gemini-2.5-pro';
+        const targetModel = model || 'gemini-2.5-flash';
         url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey}`;
         options = {
             method: 'POST',

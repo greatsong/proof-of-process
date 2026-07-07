@@ -24,7 +24,7 @@ export function APIProvider({ children }) {
                 provider: 'gemini',
                 apiKeys: { gemini: '', openai: '', claude: '' },
                 models: {
-                    gemini: 'gemini-2.0-flash',
+                    gemini: 'gemini-2.5-flash',
                     openai: 'gpt-4o',
                     claude: 'claude-sonnet-4-6'
                 }
@@ -33,7 +33,7 @@ export function APIProvider({ children }) {
             // Migration: Ensure models object exists
             if (!initialSettings.models) {
                 initialSettings.models = {
-                    gemini: initialSettings.ensembleModels?.gemini || 'gemini-2.0-flash',
+                    gemini: initialSettings.ensembleModels?.gemini || 'gemini-2.5-flash',
                     openai: initialSettings.ensembleModels?.openai || 'gpt-4o',
                     claude: initialSettings.ensembleModels?.claude || 'claude-sonnet-4-6'
                 }
@@ -41,6 +41,11 @@ export function APIProvider({ children }) {
                 if (initialSettings.model && initialSettings.provider !== 'ensemble') {
                     initialSettings.models[initialSettings.provider] = initialSettings.model
                 }
+            }
+
+            // Migration: Google이 퇴역시킨 Gemini 모델(1.x/2.0)이 저장돼 있으면 2.5-flash로 교체
+            if (/^gemini-(1\.|2\.0)/.test(initialSettings.models.gemini || '')) {
+                initialSettings.models.gemini = 'gemini-2.5-flash'
             }
 
             // Migration: Ensure apiKeys object exists

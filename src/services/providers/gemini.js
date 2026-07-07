@@ -6,7 +6,7 @@ import { fetchWithTimeout } from '../utils'
 /**
  * Gemini API 호출
  */
-export async function callGeminiAPI(prompt, apiKey, model = 'gemini-2.5-pro') {
+export async function callGeminiAPI(prompt, apiKey, model = 'gemini-2.5-flash') {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
 
     const response = await fetchWithTimeout(url, {
