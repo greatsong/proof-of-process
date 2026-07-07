@@ -4,7 +4,6 @@ import { verifyToken, extractBearerToken } from './_lib/auth.js';
 import { validateEvaluateRequest } from './_lib/validation.js';
 import { isAllowedOrigin, defaultAllowlist } from './_lib/origin.js';
 import { checkRateLimit } from './_lib/rateLimit.js';
-import { labelChatTranscript } from './_lib/labeler.js';
 
 const SERVER_KEYS = {
     gemini: process.env.GEMINI_API_KEY || '',
@@ -19,42 +18,20 @@ export const config = {
 const RATE_LIMIT_PER_TOKEN = 60;
 const RATE_LIMIT_WINDOW_SEC = 60 * 60;
 
-// Learning-Oriented System Prompt
-const LEARNING_SYSTEM_PROMPT = `
-당신은 AI 교육 평가 전문가입니다.
-첨부된 채팅 로그를 "학습 참여도(Learning Engagement)"와 "인지적 마찰(Cognitive Friction)" 관점에서 분석하십시오.
+// 사용자 메시지(클라이언트가 이미 완성한 루브릭 기반 평가 프롬프트)의 스키마를
+// 절대 재정의하지 않고, interactionMode 분류만 얹는 추가(additive) 지침.
+// 과거에는 이 시스템 프롬프트가 자체 JSON 스키마(고정 3개 기준, totalScore 등)를
+// 강제해 사용자 메시지의 루브릭별 스키마와 충돌했다 — evidence/weaknesses/nextSteps
+// 등 필드가 통째로 사라지고, 채점 기준 개수까지 달라지는 문제가 있었다.
+const INTERACTION_MODE_SYSTEM_PROMPT = `당신은 AI 교육 평가 전문가입니다. 사용자 메시지에 포함된 평가 루브릭, 채점 기준, JSON 출력 형식을 그대로 따르십시오. 항목 수나 필드를 임의로 바꾸거나 생략하지 마십시오.
 
-# 0. 화자 식별 규칙 (매우 중요)
-입력 로그는 [학생] / [AI] / [AI?] / [?] 라벨이 줄 앞에 붙어있습니다.
-- [학생] 으로 시작하는 줄만 학습자의 발화입니다. 이것만 평가 대상입니다.
-- [AI], [AI?] 로 시작하는 줄은 AI 발화입니다. 절대로 학습자에게 귀속하지 마십시오.
-- [?] 로 시작하는 줄은 화자 미상입니다. 인용하지 말고 평가 근거로 쓰지 마십시오.
-- "~할까요?", "~드릴게요", "~제안드립니다", "~하시면 됩니다" 등 정중·제안조는 AI 발화의 시그니처입니다.
-- qualitativeEvaluation의 「」 직접 인용은 반드시 [학생] 라벨이 붙은 줄에서만 가져오십시오.
+추가로, 학습자의 상호작용 패턴을 아래 4가지 중 하나로 분류하여 최상위 필드 "interactionMode"에 포함하십시오 (사용자 메시지의 JSON 예시에 없는 필드이지만 반드시 추가하십시오):
+1. Delegation - AI에게 결과물만 요청하고 이해하려 하지 않음
+2. Iterative Debugging - 에러 해결을 AI에게 수동적으로 반복 요청함
+3. Generation-then-Comprehension - 생성된 결과를 검토하고 질문함
+4. Conceptual Inquiry - 원리를 먼저 질문하거나 힌트를 요청함
 
-# 1. 상호작용 패턴 분류 (Interaction Patterns)
-사용자의 행동을 다음 4가지 모드 중 하나로 분류하십시오:
-1. 위임 (Delegation) - 낮은 점수: AI에게 코드를 짜달라고만 하고 이해하려 하지 않음.
-2. 수동적 디버깅 (Iterative Debugging) - 낮은 점수: 에러 해결을 수동적으로 요청함.
-3. 생성 후 이해 (Generation-then-Comprehension) - 높은 점수: 생성된 코드를 검토하고 질문함.
-4. 개념적 탐구 (Conceptual Inquiry) - 높은 점수: 원리를 먼저 질문하거나 힌트를 요청함.
-
-# 2. 출력 형식 (JSON)
-반드시 아래 JSON 형식으로만 응답하십시오 (마크다운 없이). JSON 파싱이 가능해야 합니다.
-{
-  "totalScore": 0-100,
-  "interactionMode": "Delegation" | "Iterative Debugging" | "Generation-then-Comprehension" | "Conceptual Inquiry",
-  "qualitativeEvaluation": "학습자의 성장을 위한 구체적인 피드백...",
-  "criteriaScores": [
-    { "name": "메타인지적 참여도", "score": 0-100, "strengths": "...", "improvement": "..." },
-    { "name": "문제 해결 주도성", "score": 0-100, "strengths": "...", "improvement": "..." },
-    { "name": "기술적 정확성", "score": 0-100, "strengths": "...", "improvement": "..." }
-  ],
-  "characteristics": ["학습 태도 키워드"],
-  "suggestions": ["구체적인 학습 가이드"],
-  "studentRecordDraft": "생기부 초안..."
-}
-`;
+interactionMode 필드 추가를 제외한 나머지 모든 사항은 사용자 메시지의 지침을 우선하십시오.`;
 
 function jsonResponse(status, body, extraHeaders) {
     return new Response(JSON.stringify(body), {
@@ -116,9 +93,7 @@ export default async function handler(req) {
 
     try {
         const { provider, model, apiKey: singleApiKey, apiKeys: clientApiKeys = {} } = v.data;
-
-        // 5. 화자 라벨링 — LLM이 화자 추측에 의존하지 않도록 정규화
-        const prompt = labelChatTranscript(v.data.prompt);
+        const prompt = v.data.prompt;
 
         // Helper for handling timeouts - return null instead of throwing to allow partial success
         const withTimeout = (promise, ms) => Promise.race([
@@ -201,7 +176,7 @@ async function callProvider(provider, prompt, apiKey, model) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: LEARNING_SYSTEM_PROMPT + "\n\nUser Chat Log:\n" + prompt }] }],
+                contents: [{ parts: [{ text: INTERACTION_MODE_SYSTEM_PROMPT + "\n\n" + prompt }] }],
                 generationConfig: { temperature: 0.3, maxOutputTokens: 8192 }
             })
         };
@@ -217,7 +192,7 @@ async function callProvider(provider, prompt, apiKey, model) {
             body: JSON.stringify({
                 model: targetModel,
                 messages: [
-                    { role: 'system', content: LEARNING_SYSTEM_PROMPT },
+                    { role: 'system', content: INTERACTION_MODE_SYSTEM_PROMPT },
                     { role: 'user', content: prompt }
                 ],
                 temperature: 0.3,
@@ -237,7 +212,7 @@ async function callProvider(provider, prompt, apiKey, model) {
             body: JSON.stringify({
                 model: targetModel,
                 max_tokens: 8192,
-                system: LEARNING_SYSTEM_PROMPT,
+                system: INTERACTION_MODE_SYSTEM_PROMPT,
                 messages: [{ role: 'user', content: prompt }]
             })
         };
@@ -314,37 +289,57 @@ function synthesizeResults(texts) {
     const count = validResults.length;
     const base = validResults[0];
 
+    // criteriaScores는 이제 사용자가 선택한 루브릭에 따라 개수·criterionId가 달라진다.
+    // 배열 인덱스가 아니라 criterionId(없으면 name)로 매칭해 evidence/weaknesses/nextSteps 등
+    // 루브릭 고유 필드가 유실되지 않도록 병합한다.
+    const matchResults = (criterion) => {
+        const key = criterion.criterionId || criterion.name;
+        return validResults
+            .map(r => (r.criteriaScores || []).find(c => (c.criterionId || c.name) === key))
+            .filter(Boolean);
+    };
+    const joinField = (matches, field, separator) =>
+        matches.map(m => m[field]).filter(Boolean).join(separator);
+
     const finalResult = {
         ...base,
         totalScore: Math.round(validResults.reduce((acc, r) => acc + (r.totalScore || 0), 0) / count),
-        // Prefer the Mode from the highest rated result or simply the first one?
-        // Let's take the mode that occurs most frequently? Too complex.
-        // Just take the base. Or join them?
-        // Let's just use base execution mode for simplicity, as specific qualitative synthesis is tricky.
-        interactionMode: base.interactionMode,
+        // 다수결로 채택, 동률이면 첫 결과의 판정을 우선한다.
+        interactionMode: mostFrequent(validResults.map(r => r.interactionMode).filter(Boolean)) || base.interactionMode,
         qualitativeEvaluation: validResults.map((r, i) => `[의견 ${i + 1}]\n${r.qualitativeEvaluation}`).join('\n\n---\n\n'),
         characteristics: [...new Set(validResults.flatMap(r => r.characteristics || []))],
         suggestions: [...new Set(validResults.flatMap(r => r.suggestions || []))],
-        criteriaScores: base.criteriaScores.map((criterion, idx) => {
-            // Average score for this criterion across all results
-            const sum = validResults.reduce((acc, r) => {
-                const c = r.criteriaScores[idx];
-                return acc + (c ? (c.score || 0) : 0);
-            }, 0);
-            const avgScore = Math.round(sum / count);
-
-            // Combine textual feedback
-            const combinedStrengths = validResults.map(r => r.criteriaScores[idx]?.strengths).filter(Boolean).join(' / ');
-            const combinedImprovement = validResults.map(r => r.criteriaScores[idx]?.improvement).filter(Boolean).join('\n');
+        criteriaScores: (base.criteriaScores || []).map((criterion) => {
+            const matches = matchResults(criterion)
+            const avgScore = matches.length
+                ? Math.round(matches.reduce((acc, c) => acc + (c.score || 0), 0) / matches.length)
+                : (criterion.score || 0)
 
             return {
                 ...criterion,
                 score: avgScore,
-                strengths: combinedStrengths,
-                improvement: combinedImprovement
+                evidence: joinField(matches, 'evidence', '\n') || criterion.evidence,
+                strengths: joinField(matches, 'strengths', ' / ') || criterion.strengths,
+                weaknesses: joinField(matches, 'weaknesses', ' / ') || criterion.weaknesses,
+                improvement: joinField(matches, 'improvement', '\n') || criterion.improvement,
+                nextSteps: joinField(matches, 'nextSteps', ' / ') || criterion.nextSteps
             };
         })
     };
 
     return JSON.stringify(finalResult, null, 2);
+}
+
+/**
+ * 최빈값 (동률이면 배열에서 먼저 등장한 값)
+ */
+function mostFrequent(values) {
+    if (values.length === 0) return null
+    const counts = new Map()
+    for (const v of values) counts.set(v, (counts.get(v) || 0) + 1)
+    let best = values[0], bestCount = 0
+    for (const [v, c] of counts) {
+        if (c > bestCount) { best = v; bestCount = c }
+    }
+    return best
 }
