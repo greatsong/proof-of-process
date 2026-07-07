@@ -245,7 +245,24 @@ async function callProvider(provider, prompt, apiKey, model) {
         throw new Error(`Unknown provider: ${provider}`);
     }
 
-    const response = await fetch(url, options);
+    // Gemini 3.5는 과부하 시 503 대신 응답이 한없이 지연되는 경우가 있어
+    // 10초 자체 제한을 걸고, 초과하면 2.5-flash로 폴백한다.
+    let response;
+    const isLatestGemini = provider === 'gemini' && targetModel !== 'gemini-2.5-flash';
+    if (isLatestGemini) {
+        const ac = new AbortController();
+        const timer = setTimeout(() => ac.abort(), 10000);
+        try {
+            response = await fetch(url, { ...options, signal: ac.signal });
+        } catch {
+            console.warn(`gemini ${targetModel} 응답 지연(10초 초과) → gemini-2.5-flash 폴백`);
+            return callProvider('gemini', prompt, apiKey, 'gemini-2.5-flash');
+        } finally {
+            clearTimeout(timer);
+        }
+    } else {
+        response = await fetch(url, options);
+    }
 
     if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
