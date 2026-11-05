@@ -20,7 +20,9 @@ function PinUnlockModal({ onUnlock, onClose }) {
         setIsChecking(false)
 
         if (!unlocked) {
-            setFailMessage('PIN이 올바르지 않습니다. 선생님께 확인해주세요.')
+            setFailMessage(unlocked === null
+                ? '시도가 너무 많습니다. 10분 뒤 다시 시도해주세요.'
+                : 'PIN이 올바르지 않습니다. 선생님께 확인해주세요.')
             setPin('')
         }
     }

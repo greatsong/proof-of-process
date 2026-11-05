@@ -7,6 +7,7 @@ import { buildEvaluationPrompt } from './prompts'
 import { parseEvaluationResponse } from './responseParser'
 import { synthesizeKRunResults } from './synthesis'
 import { fetchWithTimeout } from './utils'
+import { redactPII } from './piiRedactor'
 
 const MAX_RETRIES = 2
 
@@ -25,7 +26,8 @@ export async function evaluateChat({ chatContent, reflection, rubric, apiSetting
         throw new Error(`'${provider}'에 대한 모델 이름이 올바르지 않습니다. 관리자 설정에서 '직접 입력'을 선택한 후 모델명(예: gemini-pro-vision, gpt-4-turbo)을 정확히 입력해주세요.`)
     }
 
-    const prompt = buildEvaluationPrompt(chatContent, rubric, reflection)
+    // 외부 AI로 가는 프롬프트 전체에서 이메일·전화번호 등 형식이 뚜렷한 값을 가린다
+    const prompt = redactPII(buildEvaluationPrompt(chatContent, rubric, reflection))
 
     // K-run evaluation: run multiple times and synthesize
     if (evaluationRuns > 1) {

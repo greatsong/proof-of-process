@@ -1,66 +1,58 @@
 import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
-import { loadFromStorage, saveToStorage, hashPassword, verifyPassword, isHashed } from '../services/storage'
+import { removeFromStorage } from '../services/storage'
 
 const AuthContext = createContext()
 
+// 운영 빌드에서는 import.meta.env.DEV가 false로 고정되어 이 값이 번들에 들어가지 않는다.
+// 관리자 비밀번호는 서버 환경변수 ADMIN_PASSWORD로만 검증한다.
+const DEV_ADMIN_PASSWORD = import.meta.env.DEV ? (import.meta.env.VITE_ADMIN_PASSWORD || '') : ''
+
 export function AuthProvider({ children }) {
-    // Default admin password - from env or fallback
-    const DEFAULT_ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || ''
-
-    const [adminPassword, setAdminPassword] = useState(DEFAULT_ADMIN_PASSWORD)
     const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false)
+    const [adminToken, setAdminToken] = useState(null)
 
-    // Load saved admin password on mount
+    // 예전에 브라우저에 저장한 비밀번호 해시를 지운다
     useEffect(() => {
-        const savedAdminPassword = loadFromStorage('adminPassword')
-        if (savedAdminPassword) setAdminPassword(savedAdminPassword)
+        removeFromStorage('adminPassword')
     }, [])
 
-    // Admin authentication (async - supports hash migration)
     const authenticateAdmin = useCallback(async (password) => {
-        // 비밀번호가 설정되지 않은 경우 빈 문자열로 통과
-        if (!adminPassword && !password) {
-            setIsAdminAuthenticated(true)
-            return true
+        // vite 개발 서버에는 /api가 없다
+        if (import.meta.env.DEV) {
+            const valid = password === DEV_ADMIN_PASSWORD
+            setIsAdminAuthenticated(valid)
+            return valid
         }
-        // 해시된 비밀번호 검증
-        if (isHashed(adminPassword)) {
-            const isValid = await verifyPassword(password, adminPassword)
-            if (isValid) {
+        try {
+            const res = await fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'admin-login', password })
+            })
+            const data = await res.json()
+            if (res.ok && data.authenticated) {
+                setAdminToken(data.token)
                 setIsAdminAuthenticated(true)
                 return true
             }
+            return res.status === 503 || res.status === 429 ? (data.error || '로그인할 수 없습니다.') : false
+        } catch {
             return false
         }
-        // 평문 비밀번호 마이그레이션: 일치하면 해시로 자동 전환
-        if (password === adminPassword) {
-            const hashed = await hashPassword(password)
-            setAdminPassword(hashed)
-            saveToStorage('adminPassword', hashed)
-            setIsAdminAuthenticated(true)
-            return true
-        }
-        return false
-    }, [adminPassword])
-
-    const setNewAdminPassword = useCallback(async (password) => {
-        const hashed = await hashPassword(password)
-        setAdminPassword(hashed)
-        saveToStorage('adminPassword', hashed)
     }, [])
 
     const logoutAdmin = useCallback(() => {
+        setAdminToken(null)
         setIsAdminAuthenticated(false)
     }, [])
 
     const value = useMemo(() => ({
-        adminPassword,
         isAdminAuthenticated,
+        adminToken,
         authenticateAdmin,
-        setNewAdminPassword,
         logoutAdmin,
-        hasAdminPassword: adminPassword !== ''
-    }), [adminPassword, isAdminAuthenticated, authenticateAdmin, setNewAdminPassword, logoutAdmin])
+        hasAdminPassword: !import.meta.env.DEV || DEV_ADMIN_PASSWORD !== ''
+    }), [isAdminAuthenticated, adminToken, authenticateAdmin, logoutAdmin])
 
     return (
         <AuthContext.Provider value={value}>

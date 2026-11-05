@@ -9,6 +9,7 @@ import PrivacyPolicy from '../components/PrivacyPolicy'
 import PinUnlockModal from '../components/PinUnlockModal'
 import { evaluateChat } from '../services/evaluator'
 import { verifyEvidence } from '../services/evidenceVerifier'
+import { redactPII } from '../services/piiRedactor'
 import { getEvaluationHistory, saveEvaluationToHistory, clearEvaluationHistory } from '../services/evaluationHistory'
 import GrowthChart from '../components/evaluation/GrowthChart'
 import { fetchSharedChat } from '../services/importChat'
@@ -151,7 +152,7 @@ function Home() {
             })
 
             // 클라이언트 사이드 인용 검증
-            const result = verifyEvidence(rawResult, content)
+            const result = verifyEvidence(rawResult, redactPII(content))
             setEvaluationResult(result)
             setStep(2)
 
@@ -175,7 +176,7 @@ function Home() {
     // PIN 잠금 해제 성공 시 최신 토큰으로 곧바로 재평가
     const handlePinUnlock = async (pin) => {
         const newSettings = await unlockApiWithPin(pin)
-        if (!newSettings) return false
+        if (!newSettings) return newSettings
 
         setShowPinUnlock(false)
         setError('')

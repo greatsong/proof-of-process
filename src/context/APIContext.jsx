@@ -95,19 +95,25 @@ export function APIProvider({ children }) {
         saveToStorage('apiSettings', settings)
     }, [])
 
-    const saveGlobalSettings = useCallback(async (settings) => {
+    const saveGlobalSettings = useCallback(async (settings, adminToken) => {
         // Save to Local
         setApiSettingsState(settings)
         saveToStorage('apiSettings', settings)
-        // Save to Server (Global)
+        // Save to Server (Global) — API 키와 토큰은 서버로 보내지 않는다
+        const { provider, model, allowEnsemble, ensembleModels } = settings
         try {
-            await fetch('/api/config', {
+            const res = await fetch('/api/config', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ settings })
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(adminToken ? { Authorization: `Bearer ${adminToken}` } : {})
+                },
+                body: JSON.stringify({ settings: { provider, model, allowEnsemble, ensembleModels } })
             })
+            return res.ok
         } catch (e) {
             console.error('Failed to save global config', e)
+            return false
         }
     }, [])
 
@@ -119,6 +125,8 @@ export function APIProvider({ children }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'unlock', pin })
             })
+            // null: 시도 한도 초과. false: PIN 불일치. 둘 다 거짓이므로 호출부가 성공으로 오인하지 않는다.
+            if (res.status === 429) return null
             const data = await res.json()
             if (data.unlocked) {
                 const newSettings = {

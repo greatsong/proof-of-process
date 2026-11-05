@@ -37,9 +37,11 @@ function ApiSettingsTab({
     unlockApiWithPin,
     showSaveMessage,
 }) {
-    const handleApiSave = () => {
-        saveGlobalSettings(apiSettings)
-        showSaveMessage('API 설정이 전 세계(서버 및 로컬)에 저장되었습니다.')
+    const handleApiSave = async () => {
+        const savedToServer = await saveGlobalSettings(apiSettings)
+        showSaveMessage(savedToServer
+            ? 'API 설정이 서버와 이 브라우저에 저장되었습니다.'
+            : 'API 설정을 이 브라우저에만 저장했습니다. 서버 저장에 실패했습니다.')
     }
 
     return (
@@ -176,7 +178,7 @@ function ApiSettingsTab({
                                     showSaveMessage('서버 API 키가 활성화되었습니다!')
                                     e.target.value = ''
                                 } else {
-                                    showSaveMessage('PIN이 올바르지 않습니다.')
+                                    showSaveMessage(success === null ? '시도가 너무 많습니다. 10분 뒤 다시 시도하세요.' : 'PIN이 올바르지 않습니다.')
                                 }
                             }
                         }}
@@ -192,7 +194,7 @@ function ApiSettingsTab({
                                     showSaveMessage('서버 API 키가 활성화되었습니다!')
                                     pinInput.value = ''
                                 } else {
-                                    showSaveMessage('PIN이 올바르지 않습니다.')
+                                    showSaveMessage(success === null ? '시도가 너무 많습니다. 10분 뒤 다시 시도하세요.' : 'PIN이 올바르지 않습니다.')
                                 }
                             }
                         }}

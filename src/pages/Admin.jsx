@@ -9,7 +9,7 @@ import SecurityTab from '../components/admin/SecurityTab'
 import './Admin.css'
 
 function Admin() {
-    const { isAdminAuthenticated, authenticateAdmin, logoutAdmin, hasAdminPassword, setNewAdminPassword } = useAuth()
+    const { isAdminAuthenticated, authenticateAdmin, logoutAdmin, hasAdminPassword, adminToken } = useAuth()
     const { apiSettings, setApiSettings, saveGlobalSettings, unlockApiWithPin } = useAPI()
     const { rubrics, addRubric, updateRubric, deleteRubric } = useEvaluation()
 
@@ -27,9 +27,9 @@ function Admin() {
 
     const handleLogin = async (e) => {
         e.preventDefault()
-        const success = await authenticateAdmin(password)
-        if (success) { setPassword(''); setPasswordError('') }
-        else { setPasswordError('비밀번호가 일치하지 않습니다.') }
+        const result = await authenticateAdmin(password)
+        if (result === true) { setPassword(''); setPasswordError('') }
+        else { setPasswordError(typeof result === 'string' ? result : '비밀번호가 일치하지 않습니다.') }
     }
 
     const handleRubricSave = (rubric) => {
@@ -105,7 +105,7 @@ function Admin() {
                 <div className="tab-content">
                     {activeTab === 'api' && (
                         <ApiSettingsTab apiSettings={apiSettings} setApiSettings={setApiSettings}
-                            saveGlobalSettings={saveGlobalSettings} unlockApiWithPin={unlockApiWithPin}
+                            saveGlobalSettings={(settings) => saveGlobalSettings(settings, adminToken)} unlockApiWithPin={unlockApiWithPin}
                             showSaveMessage={showSaveMessage} />
                     )}
                     {activeTab === 'rubrics' && (
@@ -115,8 +115,7 @@ function Admin() {
                             onCreateNew={() => { setEditingRubric(null); setShowRubricEditor(true) }} />
                     )}
                     {activeTab === 'security' && (
-                        <SecurityTab hasAdminPassword={hasAdminPassword}
-                            setNewAdminPassword={setNewAdminPassword} showSaveMessage={showSaveMessage} />
+                        <SecurityTab />
                     )}
                 </div>
             </div>

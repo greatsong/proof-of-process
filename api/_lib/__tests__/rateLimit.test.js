@@ -20,6 +20,7 @@ vi.mock('@vercel/kv', () => ({
             kvTTL.set(key, sec)
             return 1
         }),
+        ttl: vi.fn(async (key) => (kvTTL.has(key) ? kvTTL.get(key) : -1)),
     },
 }))
 
