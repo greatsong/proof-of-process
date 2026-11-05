@@ -14,8 +14,8 @@ import { kv } from '@vercel/kv'
 export async function checkRateLimit(key, limit, windowSec) {
     try {
         const count = await kv.incr(key)
-        // 첫 호출이면 TTL 설정
-        if (count === 1) {
+        // 첫 호출이거나 만료 설정이 빠진 키면 TTL 설정. 빠진 채로 두면 한도를 넘은 뒤 영구 차단된다.
+        if (count === 1 || (await kv.ttl(key)) < 0) {
             await kv.expire(key, windowSec)
         }
 

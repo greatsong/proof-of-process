@@ -10,6 +10,8 @@ describe('redactPII', () => {
         expect(redactPII('번호 080101-3123456')).toBe('번호 [주민등록번호]')
         expect(redactPII('사무실 070-1234-5678')).toBe('사무실 [전화번호]')
         expect(redactPII('010-1234-5678')).toBe('[전화번호]')
+        expect(redactPII('연락처 0212345678')).toBe('연락처 [전화번호]')
+        expect(redactPII('연락처 0311234567')).toBe('연락처 [전화번호]')
     })
 
     it('평가에 필요한 일반 숫자는 그대로 둔다', () => {
