@@ -19,6 +19,13 @@ vi.mock('@vercel/kv', () => ({
             return next
         }),
         expire: vi.fn(async () => 1),
+        ttl: vi.fn(async () => 600),
+        decr: vi.fn(async (key) => {
+            if (kvState.broken) throw new Error('kv down')
+            const next = (kvState.store.get(key) ?? 0) - 1
+            kvState.store.set(key, next)
+            return next
+        }),
     },
 }))
 
@@ -108,6 +115,22 @@ describe('/api/config', () => {
         for (let i = 0; i < 100; i++) {
             expect((await handler(post({ action: 'unlock', pin: '4321' }))).status).toBe(200)
         }
+    })
+
+    it('병렬 대입도 실패 한도를 넘겨 비교되지 않는다', async () => {
+        const results = await Promise.all(
+            Array.from({ length: 100 }, () => handler(post({ action: 'unlock', pin: '0000' })))
+        )
+        expect(results.filter((res) => res.status === 403).length).toBe(60)
+        expect(results.filter((res) => res.status === 429).length).toBe(40)
+    })
+
+    it('토큰마다 평가 한도를 나눌 sid가 들어 있다', async () => {
+        const first = await (await handler(post({ action: 'unlock', pin: '4321' }))).json()
+        const second = await (await handler(post({ action: 'unlock', pin: '4321' }))).json()
+        const sid = (token) => JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString()).sid
+        expect(sid(first.token)).toEqual(expect.any(String))
+        expect(sid(first.token)).not.toBe(sid(second.token))
     })
 
     it('ADMIN_PASSWORD가 없으면 관리자 로그인이 열리지 않는다', async () => {

@@ -1,7 +1,7 @@
 
 import { kv } from '@vercel/kv';
 import { extractBearerToken, secretEquals, signToken, verifyToken } from './_lib/auth.js';
-import { failureCount, recordFailure } from './_lib/attemptLimit.js';
+import { releaseAttempt, reserveAttempt } from './_lib/attemptLimit.js';
 import { sanitizeConfig } from './_lib/publicConfig.js';
 
 export const config = {
@@ -28,16 +28,17 @@ function clientAddress(req) {
 
 async function checkSecret(req, input, expected, label) {
     const key = `rl:${label}:${clientAddress(req)}`;
-    if (await failureCount(key) >= FAILURE_LIMIT) {
+    if (!(await reserveAttempt(key, FAILURE_LIMIT, FAILURE_WINDOW_SEC))) {
         return { blocked: true, ok: false };
     }
     const ok = await secretEquals(input, expected);
-    if (!ok) await recordFailure(key, FAILURE_WINDOW_SEC);
+    if (ok) await releaseAttempt(key);
     return { blocked: false, ok };
 }
 
 async function issueToken(sub, jwtSecret) {
-    const token = await signToken({ sub }, jwtSecret, TOKEN_TTL_SEC);
+    // sid: 평가 한도를 학급 전체가 아니라 토큰별로 세기 위한 값
+    const token = await signToken({ sub, sid: crypto.randomUUID() }, jwtSecret, TOKEN_TTL_SEC);
     return { token, expiresAt: Math.floor(Date.now() / 1000) + TOKEN_TTL_SEC };
 }
 

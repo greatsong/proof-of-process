@@ -128,7 +128,7 @@ async function handleEvaluate(req) {
     }
 
     // 4. Rate limit (토큰별 시간당 한도)
-    const rlKey = `rl:eval:${claims.sub || 'anon'}`;
+    const rlKey = `rl:eval:${claims.sid || claims.sub || 'anon'}`;
     const rl = await checkRateLimit(rlKey, RATE_LIMIT_PER_TOKEN, RATE_LIMIT_WINDOW_SEC);
     if (!rl.allowed) {
         const retryAfter = Math.max(1, rl.resetAt - Math.floor(Date.now() / 1000));

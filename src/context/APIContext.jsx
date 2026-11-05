@@ -125,6 +125,8 @@ export function APIProvider({ children }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'unlock', pin })
             })
+            // null: 시도 한도 초과. false: PIN 불일치. 둘 다 거짓이므로 호출부가 성공으로 오인하지 않는다.
+            if (res.status === 429) return null
             const data = await res.json()
             if (data.unlocked) {
                 const newSettings = {

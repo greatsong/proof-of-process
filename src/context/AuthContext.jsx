@@ -35,7 +35,7 @@ export function AuthProvider({ children }) {
                 setIsAdminAuthenticated(true)
                 return true
             }
-            return false
+            return res.status === 503 || res.status === 429 ? (data.error || '로그인할 수 없습니다.') : false
         } catch {
             return false
         }

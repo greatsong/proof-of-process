@@ -27,9 +27,9 @@ function Admin() {
 
     const handleLogin = async (e) => {
         e.preventDefault()
-        const success = await authenticateAdmin(password)
-        if (success) { setPassword(''); setPasswordError('') }
-        else { setPasswordError('비밀번호가 일치하지 않습니다.') }
+        const result = await authenticateAdmin(password)
+        if (result === true) { setPassword(''); setPasswordError('') }
+        else { setPasswordError(typeof result === 'string' ? result : '비밀번호가 일치하지 않습니다.') }
     }
 
     const handleRubricSave = (rubric) => {

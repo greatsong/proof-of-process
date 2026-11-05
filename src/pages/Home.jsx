@@ -176,7 +176,7 @@ function Home() {
     // PIN 잠금 해제 성공 시 최신 토큰으로 곧바로 재평가
     const handlePinUnlock = async (pin) => {
         const newSettings = await unlockApiWithPin(pin)
-        if (!newSettings) return false
+        if (!newSettings) return newSettings
 
         setShowPinUnlock(false)
         setError('')

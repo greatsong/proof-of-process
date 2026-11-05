@@ -178,7 +178,7 @@ function ApiSettingsTab({
                                     showSaveMessage('서버 API 키가 활성화되었습니다!')
                                     e.target.value = ''
                                 } else {
-                                    showSaveMessage('PIN이 올바르지 않습니다.')
+                                    showSaveMessage(success === null ? '시도가 너무 많습니다. 10분 뒤 다시 시도하세요.' : 'PIN이 올바르지 않습니다.')
                                 }
                             }
                         }}
@@ -194,7 +194,7 @@ function ApiSettingsTab({
                                     showSaveMessage('서버 API 키가 활성화되었습니다!')
                                     pinInput.value = ''
                                 } else {
-                                    showSaveMessage('PIN이 올바르지 않습니다.')
+                                    showSaveMessage(success === null ? '시도가 너무 많습니다. 10분 뒤 다시 시도하세요.' : 'PIN이 올바르지 않습니다.')
                                 }
                             }
                         }}
