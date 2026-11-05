@@ -111,3 +111,22 @@ export function extractBearerToken(req) {
     const m = /^Bearer\s+(.+)$/i.exec(auth)
     return m ? m[1].trim() : null
 }
+
+/**
+ * 비밀값 비교. 해시로 길이를 맞춘 뒤 모든 바이트를 비교해 응답 시간으로 값이 드러나지 않게 한다.
+ * @param {unknown} input
+ * @param {string} expected
+ * @returns {Promise<boolean>}
+ */
+export async function secretEquals(input, expected) {
+    if (typeof input !== 'string' || typeof expected !== 'string' || expected === '') return false
+    const [a, b] = await Promise.all([
+        crypto.subtle.digest('SHA-256', enc.encode(input)),
+        crypto.subtle.digest('SHA-256', enc.encode(expected)),
+    ])
+    const left = new Uint8Array(a)
+    const right = new Uint8Array(b)
+    let diff = 0
+    for (let i = 0; i < left.length; i++) diff |= left[i] ^ right[i]
+    return diff === 0
+}
