@@ -21,7 +21,7 @@ function reserveInMemory(key, windowSec) {
     return entry.count
 }
 
-/** @returns {Promise<boolean>} 한도 안이면 true */
+/** @returns {Promise<boolean>} 한도 안이면 true. 한도를 넘은 예약은 남기지 않는다. */
 export async function reserveAttempt(key, limit, windowSec) {
     const local = reserveInMemory(key, windowSec)
     let shared = 0
@@ -32,12 +32,15 @@ export async function reserveAttempt(key, limit, windowSec) {
     } catch (e) {
         console.warn('Attempt limit store failed (memory only):', e?.message || e)
     }
-    return Math.max(local, shared) <= limit
+    if (Math.max(local, shared) <= limit) return true
+    await releaseAttempt(key, shared > 0)
+    return false
 }
 
-export async function releaseAttempt(key) {
+export async function releaseAttempt(key, useKv = true) {
     const entry = memory.get(key)
     if (entry && entry.count > 0) entry.count -= 1
+    if (!useKv) return
     try {
         await kv.decr(key)
     } catch {

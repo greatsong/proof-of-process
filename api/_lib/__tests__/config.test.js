@@ -125,6 +125,12 @@ describe('/api/config', () => {
         expect(results.filter((res) => res.status === 429).length).toBe(40)
     })
 
+    it('올바른 PIN 요청은 끝난 뒤 카운터에 남지 않는다', async () => {
+        await Promise.all(Array.from({ length: 120 }, () => handler(post({ action: 'unlock', pin: '4321' }))))
+        expect((await handler(post({ action: 'unlock', pin: '4321' }))).status).toBe(200)
+        expect(kvState.store.get('rl:unlock:203.0.113.9')).toBe(0)
+    })
+
     it('토큰마다 평가 한도를 나눌 sid가 들어 있다', async () => {
         const first = await (await handler(post({ action: 'unlock', pin: '4321' }))).json()
         const second = await (await handler(post({ action: 'unlock', pin: '4321' }))).json()

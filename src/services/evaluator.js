@@ -26,8 +26,8 @@ export async function evaluateChat({ chatContent, reflection, rubric, apiSetting
         throw new Error(`'${provider}'에 대한 모델 이름이 올바르지 않습니다. 관리자 설정에서 '직접 입력'을 선택한 후 모델명(예: gemini-pro-vision, gpt-4-turbo)을 정확히 입력해주세요.`)
     }
 
-    // 외부 AI로 가는 프롬프트에는 이메일·전화번호 등 형식이 뚜렷한 값을 가려서 넣는다
-    const prompt = buildEvaluationPrompt(redactPII(chatContent), rubric, redactPII(reflection))
+    // 외부 AI로 가는 프롬프트 전체에서 이메일·전화번호 등 형식이 뚜렷한 값을 가린다
+    const prompt = redactPII(buildEvaluationPrompt(chatContent, rubric, reflection))
 
     // K-run evaluation: run multiple times and synthesize
     if (evaluationRuns > 1) {

@@ -4,6 +4,7 @@ import { verifyToken, extractBearerToken } from './_lib/auth.js';
 import { validateEvaluateRequest } from './_lib/validation.js';
 import { isAllowedOrigin, defaultAllowlist } from './_lib/origin.js';
 import { checkRateLimit } from './_lib/rateLimit.js';
+import { redactPII } from '../src/services/piiRedactor.js';
 
 const SERVER_KEYS = {
     gemini: process.env.GEMINI_API_KEY || '',
@@ -19,6 +20,8 @@ export const config = {
 };
 
 const RATE_LIMIT_PER_TOKEN = 60;
+// PIN을 다시 입력하면 토큰별 한도가 새로 시작되므로 서버 키 전체 사용량 상한을 함께 둔다.
+const RATE_LIMIT_GLOBAL = 1500;
 const RATE_LIMIT_WINDOW_SEC = 60 * 60;
 
 // 사용자 메시지(클라이언트가 이미 완성한 루브릭 기반 평가 프롬프트)의 스키마를
@@ -130,8 +133,11 @@ async function handleEvaluate(req) {
     // 4. Rate limit (토큰별 시간당 한도)
     const rlKey = `rl:eval:${claims.sid || claims.sub || 'anon'}`;
     const rl = await checkRateLimit(rlKey, RATE_LIMIT_PER_TOKEN, RATE_LIMIT_WINDOW_SEC);
-    if (!rl.allowed) {
-        const retryAfter = Math.max(1, rl.resetAt - Math.floor(Date.now() / 1000));
+    const globalRl = rl.allowed
+        ? await checkRateLimit('rl:eval:global', RATE_LIMIT_GLOBAL, RATE_LIMIT_WINDOW_SEC)
+        : rl;
+    if (!globalRl.allowed) {
+        const retryAfter = Math.max(1, globalRl.resetAt - Math.floor(Date.now() / 1000));
         return jsonResponse(429, {
             error: `요청 한도 초과 (시간당 ${RATE_LIMIT_PER_TOKEN}회). 잠시 후 다시 시도하세요.`
         }, { 'Retry-After': String(retryAfter) });
@@ -139,7 +145,8 @@ async function handleEvaluate(req) {
 
     try {
         const { provider, model, apiKey: singleApiKey, apiKeys: clientApiKeys = {} } = v.data;
-        const prompt = v.data.prompt;
+        // 화면을 거치지 않은 요청도 형식이 뚜렷한 개인정보를 가린 뒤 외부 AI로 보낸다
+        const prompt = redactPII(v.data.prompt);
 
         // Helper for handling timeouts - return null instead of throwing to allow partial success
         const withTimeout = (promise, ms) => Promise.race([
